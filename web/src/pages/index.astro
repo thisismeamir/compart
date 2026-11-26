@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import DependencySpine from '../components/DependencySpine.astro';
 import TracksExplorer from '../components/TrackExplorer.astro';
 import { manifest } from '../data/curriculum';
-import url from '../utils/url.ts'
+import {url }from '../utils/url.ts'
 
 const stats = [
   { label: 'Curriculum Parts', value: String(manifest.stats.partsCount), detail: 'Parts 0–14' },

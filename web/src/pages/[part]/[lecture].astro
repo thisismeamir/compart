@@ -10,7 +10,7 @@ import {
   type PartEntry,
   type LectureEntry,
 } from '../../data/curriculum';
-import url from '../../utils/url.ts'
+import {url} from '../../utils/url.ts'
 
 export function getStaticPaths() {
   const flat = manifest.parts.flatMap((part) =>
