@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import DependencySpine from '../components/DependencySpine.astro';
 import TracksExplorer from '../components/TrackExplorer.astro';
 import { manifest } from '../data/curriculum';
+import url from '../utils/url.ts'
 
 const stats = [
   { label: 'Curriculum Parts', value: String(manifest.stats.partsCount), detail: 'Parts 0–14' },
@@ -32,19 +33,19 @@ const pillars = [
         </p>
         <div class="mt-8 flex flex-wrap gap-3 font-display text-small">
           <a
-            href="/blocks-demo"
+              href={url("/blocks-demo")}
             class="bg-accent px-5 py-2.5 text-white transition hover:bg-orion-70"
           >
             Preview Lecture Blocks →
           </a>
           <a
-            href="#tracks"
+              href={url("#tracks")}
             class="border border-rule bg-paper px-5 py-2.5 text-ink transition hover:border-ink"
           >
             View 4 Tracks
           </a>
           <a
-            href="#spine"
+              href={url("#spine")}
             class="border border-rule bg-paper px-5 py-2.5 text-ink transition hover:border-ink"
           >
             Lecture Dependencies

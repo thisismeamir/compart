@@ -10,6 +10,7 @@ import {
   type PartEntry,
   type LectureEntry,
 } from '../../data/curriculum';
+import url from '../../utils/url.ts'
 
 export function getStaticPaths() {
   const flat = manifest.parts.flatMap((part) =>
@@ -167,7 +168,7 @@ const deliverableItems = [
         <li>
           {ref.url ? (
             <a
-              href={ref.url}
+              href={url(ref.url)}
               target="_blank"
               rel="noopener noreferrer"
               class="transition hover:text-accent hover:underline"

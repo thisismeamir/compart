@@ -1,6 +1,7 @@
 ---
 import TrackLayout from '../../layouts/TrackLayout.astro';
 import TrackMap from '../../components/TrackMap.astro';
+import url from '../../utils/url.ts'
 import {
   manifest,
   partsByNumber,
@@ -43,8 +44,8 @@ export function getStaticPaths() {
         resolvedStops,
         lectureCount,
         targetedCount,
-        prevTrack: prev ? { label: prev.name, href: `/tracks/${prev.id}` } : undefined,
-        nextTrack: next ? { label: next.name, href: `/tracks/${next.id}` } : undefined,
+        prevTrack: prev ? { label: prev.name, href: url(`/tracks/${prev.id}`) } : undefined,
+        nextTrack: next ? { label: next.name, href: url(`/tracks/${next.id}`) } : undefined,
       },
     };
   });
@@ -111,14 +112,14 @@ const { track, resolvedStops, lectureCount, targetedCount, prevTrack, nextTrack 
                 </div>
 
                 <h3 class="mt-2 font-display text-h4 font-light text-ink">
-                  <a href={`/parts/${stop.part.slug}`} class="transition hover:text-accent">
+                  <a href={url(`/parts/${stop.part.slug}`)} class="transition hover:text-accent">
                     {stop.part.title}
                   </a>
                 </h3>
               </div>
 
               <a
-                href={`/parts/${stop.part.slug}`}
+                href={url(`/parts/${stop.part.slug}`)}
                 class="shrink-0 font-code text-label uppercase text-accent transition hover:underline"
               >
                 Part {stop.part.number} Overview →
@@ -127,7 +128,8 @@ const { track, resolvedStops, lectureCount, targetedCount, prevTrack, nextTrack 
 
             <div class="mt-5 divide-y divide-rule border-t border-b border-rule">
               {stop.lectures.map((lec) => (
-                <a href={`/lectures/${lec.slug}`} class="group flex flex-wrap items-baseline justify-between gap-3 py-3.5 transition">
+              <a href={url(`/lectures/${lec.slug}`)}
+                class="group flex flex-wrap items-baseline justify-between gap-3 py-3.5 transition">
                   <div class="min-w-0">
                     <span class="font-code text-label uppercase text-accent">Lecture {lec.id}</span>
                     <span class="mx-2 text-muted">·</span>
