@@ -1,0 +1,62 @@
+---
+import Base from './Base.astro';
+import Cover from '../components/Cover.astro';
+import ProgressRail, { type RailSection } from '../components/ProgressRail.astro';
+import type { LectureMeta } from '../theme/content-types';
+
+interface NavLink {
+  slug: string;
+  title: string;
+}
+
+interface Props {
+  meta: LectureMeta;
+  sections: RailSection[];
+  prev?: NavLink;
+  next?: NavLink;
+}
+
+const { meta, sections, prev, next } = Astro.props;
+const firstSectionId = sections[0]?.id ?? 'content';
+---
+<Base title={`${meta.title} — ComPart`} description={meta.abstract} showNav={true}>
+  <Cover meta={meta} firstSectionId={firstSectionId} />
+  <ProgressRail sections={sections} />
+
+  <main class="lecture lecture-grid bg-paper text-ink p-6 mx-[20%] ">
+    <slot />
+  </main>
+
+  {(prev || next) && (
+    <nav
+      aria-label="Adjacent lectures"
+      class="border-t border-rule bg-paper font-display text-ink"
+    >
+      <div class="mx-auto grid max-w-6xl grid-cols-2 divide-x divide-rule">
+        <div class="p-6">
+          {prev && (
+            <a href={`/${prev.slug}`} class="group block">
+              <span class="block font-code text-label uppercase text-muted">← Previous</span>
+              <span class="mt-1 block text-small text-ink group-hover:text-accent">{prev.title}</span>
+            </a>
+          )}
+        </div>
+        <div class="p-6 text-right">
+          {next && (
+            <a href={`/${next.slug}`} class="group block">
+              <span class="block font-code text-label uppercase text-muted">Next →</span>
+              <span class="mt-1 block text-small text-ink group-hover:text-accent">{next.title}</span>
+            </a>
+          )}
+        </div>
+      </div>
+    </nav>
+  )}
+
+  <script>
+    import '../scripts/rail';
+    import '../scripts/math';
+    import '../scripts/plotly';
+    import '../scripts/mindmap';
+  </script>
+</Base>

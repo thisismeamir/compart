@@ -1,0 +1,83 @@
+---
+import '../styles/global.css';
+import ThemeToggle from '../components/ThemeToggle.astro';
+interface Props {
+  title?: string;
+  description?: string;
+  showNav?: boolean;
+}
+
+const {
+  title = 'ComPart — From First Principles to FCC',
+  description = 'A unified graduate-level high-energy physics curriculum spanning 15 Parts and 123 Lectures from mathematical foundations to FCC.',
+  showNav = true,
+} = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+      crossorigin="anonymous"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+      crossorigin="anonymous"
+      ></script>
+<script is:inline>
+  (() => {
+    const stored = localStorage.getItem('compart-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.dataset.theme =
+      stored === 'dark' || (!stored && prefersDark) ? 'dark' : 'light';
+  })();
+</script>
+  </head>
+
+  <body class="flex min-h-screen flex-col bg-paper font-text text-body text-ink antialiased">
+    {showNav && (
+      <header class="border-b border-rule bg-paper text-ink">
+        <div class="mx-auto flex h-14 max-w-6xl items-center justify-between px-6 font-display">
+          <a href="/" class="flex items-center gap-2.5 text-small font-semibold tracking-tight text-ink">
+            <span class="inline-grid size-6 place-items-center bg-accent font-code text-label text-white">
+              CP
+            </span>
+            <span>ComPart</span>
+          </a>
+
+          <nav class="flex items-center gap-6 text-small text-muted">
+            <a href="/#tracks" class="transition hover:text-ink">Tracks</a>
+            <a href="/#spine" class="transition hover:text-ink">Spine</a>
+            <a href="/blocks-demo" class="transition hover:text-accent">Blocks Demo</a>
+<ThemeToggle />
+          </nav>
+        </div>
+      </header>
+    )}
+
+    <div class="flex-1">
+      <slot />
+    </div>
+
+    <footer class="border-t border-rule bg-paper py-8 font-display text-small text-muted">
+      <div class="mx-auto flex max-w-6xl flex-col justify-between gap-2 px-6 sm:flex-row">
+         <p>ComPart 2026 · MIT License</p>
+         <a href="https://github.com/thisismeamir/compart" class="font-mono">Check on GitHub</a>
+     </div>
+    </footer>
+  </body>
+</html>

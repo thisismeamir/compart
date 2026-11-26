@@ -1,0 +1,30 @@
+---
+interface Props {
+  definition: string;
+  slug?: string;
+  label?: string;
+}
+
+const { definition, slug, label } = Astro.props;
+---
+
+<span class="group/term relative inline-block" tabindex="0">
+  <span class="cursor-help border-b border-dotted border-accent text-ink">
+    <slot>{label}</slot>
+  </span>
+
+  <span
+    role="tooltip"
+    class="pointer-events-none invisible absolute bottom-full left-1/2 z-30 mb-2 w-64 -translate-x-1/2 border border-rule bg-paper p-3 text-left font-text text-small leading-snug text-ink opacity-0 transition group-hover/term:pointer-events-auto group-hover/term:visible group-hover/term:opacity-100 group-focus-within/term:pointer-events-auto group-focus-within/term:visible group-focus-within/term:opacity-100"
+  >
+    <span class="block">{definition}</span>
+    {slug && (
+      <a
+        href={`/glossary#${slug}`}
+        class="mt-2 inline-block font-code text-label uppercase text-accent hover:underline"
+      >
+        Glossary →
+      </a>
+    )}
+  </span>
+</span>

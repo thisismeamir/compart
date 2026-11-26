@@ -1,0 +1,247 @@
+---
+import LectureLayout from '../layouts/LectureLayout.astro';
+import Section from '../components/Section.astro';
+import Callout from '../components/blocks/Callout.astro';
+import Marginalia from '../components/blocks/Marginalia.astro';
+import Steps from '../components/blocks/Steps.astro';
+import Step from '../components/blocks/Step.astro';
+import MathBlock from '../components/blocks/MathBlock.astro';
+import Derivation from '../components/blocks/Derivation.astro';
+import Code from '../components/blocks/Code.astro';
+import Plotly from '../components/blocks/Plotly.astro';
+import MindMap, { type GraphSpec } from '../components/blocks/MindMap.astro';
+import Figure from '../components/blocks/Figure.astro';
+import Exercise from '../components/blocks/Exercise.astro';
+import type { LectureMeta } from '../theme/content-types';
+import type { RailSection } from '../components/ProgressRail.astro';
+
+const meta: LectureMeta = {
+  title: 'Study Method & Reproducible Workflows',
+  part: 0,
+  number: 2,
+  abstract:
+    'Turning conceptual HEP knowledge into verified competence via the Three-Pass Study Cycle, Key4hep and Scikit-HEP columnar processing, deterministic RNG control, and physics-invariant unit testing.',
+  deliverables: [
+    'Apply the Three-Pass Study Cycle (Analytic → First-Principles Code → Production HEP Closure)',
+    'Choose appropriately between C++/ROOT RDataFrame and Python/Scikit-HEP columnar ecosystems',
+    'Audit analysis workflows for environment pinning, parallel RNG safety, and float32 cancellation',
+  ],
+  contentTypes: ['math', 'code', 'figures', 'exercises'],
+  prerequisites: [{ slug: '0-1', title: 'Lecture 0.1 — The HEP Landscape' }],
+};
+
+const sections: RailSection[] = [
+  { id: 'method',        title: 'Evidence & Verification',    kind: 'prose' },
+  { id: 'three-pass',    title: 'Three-Pass Study Cycle',     kind: 'steps' },
+  { id: 'cancellation',  title: 'Catastrophic Cancellation',  kind: 'derivation' },
+  { id: 'software-stack', title: 'Key4hep & Throughput',      kind: 'example' },
+  { id: 'lab-0-2',       title: 'Unit Tests & Problem Set',   kind: 'lab' },
+];
+
+const throughputData = [
+  {
+    x: [1e3, 1e4, 5e4, 1e5, 3e5],
+    y: [2.6e6, 2.5e6, 1.8e6, 1.3e6, 1.0e6],
+    mode: 'lines+markers',
+    name: 'Naive Python Loop',
+  },
+  {
+    x: [1e3, 1e4, 5e4, 1e5, 3e5],
+    y: [1.1e8, 1.3e8, 7.2e7, 5.1e7, 3.5e7],
+    mode: 'lines+markers',
+    name: 'Columnar NumPy Vectorized',
+  },
+];
+
+const key4hepGraph: GraphSpec = {
+  grid: { cols: 3, rows: 2 },
+  nodes: [
+    {
+      id: 'edm4hep',
+      col: 0,
+      row: 0,
+      variant: 'accent',
+      kicker: 'Pillar 1 · Data Model',
+      title: 'EDM4hep + PODIO',
+      body: 'Shared POD C++ collections over ROOT, RNTuple, or SIO.',
+      step: 0,
+    },
+    {
+      id: 'dd4hep',
+      col: 1,
+      row: 0,
+      kicker: 'Pillar 2 · Geometry',
+      title: 'DD4hep',
+      body: 'Single-source XML/C++ geometry for Geant4, ACTS, and Phoenix.',
+      step: 1,
+    },
+    {
+      id: 'gaudi',
+      col: 2,
+      row: 0,
+      kicker: 'Pillar 3 · Framework',
+      title: 'Gaudi',
+      body: 'Event loops, scheduling, and k4MarlinWrapper compatibility.',
+      step: 2,
+    },
+    {
+      id: 'analysis',
+      col: 0,
+      row: 1,
+      colSpan: 2,
+      variant: 'muted',
+      kicker: 'Physics & Analysis',
+      title: 'Geant4 → ACTS / PandoraPFA → FCCAnalyses',
+      body: 'Declarative columnar processing on ROOT::RDataFrame.',
+      step: 3,
+    },
+    {
+      id: 'deploy',
+      col: 2,
+      row: 1,
+      variant: 'muted',
+      kicker: 'Provenance',
+      title: 'Spack & CVMFS',
+      body: 'Immutable dated release tags for reproducible runs.',
+      step: 3,
+    },
+  ],
+  edges: [
+    { from: 'edm4hep', to: 'analysis', label: 'Typed Frames', step: 3 },
+    { from: 'dd4hep', to: 'analysis', label: 'Geometry', step: 3 },
+    { from: 'gaudi', to: 'analysis', label: 'Scheduling', step: 3 },
+    { from: 'deploy', to: 'gaudi', label: 'Pinned Stack', style: 'dashed', step: 3 },
+  ],
+};
+
+const invariantTestCode = `import numpy as np
+
+# Deterministic parallel RNG: split independent streams via SeedSequence
+master = np.random.SeedSequence(20260401)
+worker_rngs = [np.random.default_rng(s) for s in master.spawn(4)]
+
+# 100 GeV electron: float32 suffers 100% catastrophic cancellation
+m_e = 0.00051099895  # GeV
+E64 = np.float64(100.0)
+p64 = np.sqrt(E64**2 - m_e**2)
+
+E32, p32 = np.float32(E64), np.float32(p64)
+m_naive_32 = np.sqrt(max(np.float32(0.0), E32 * E32 - p32 * p32))
+m_stab_64  = np.sqrt((E64 - p64) * (E64 + p64))
+assert m_naive_32 == 0.0
+assert np.isclose(m_stab_64, m_e, rtol=1e-4)`;
+---
+<LectureLayout meta={meta} sections={sections}>
+  <Section kind="prose" id="method" title="Scientific Note-Taking & Evidence Discipline">
+    <p>
+      Reading a textbook derivation without writing code leaves hidden assumptions untested;
+      conversely, running a production analysis framework without deriving the underlying physics
+      turns the framework into a black box whose failure modes cannot be diagnosed.
+    </p>
+    <Marginalia n="1">
+      Always tag epistemic status: established measurements (PDG 2024), feasibility-study baselines
+      (FCC 2025 FSR), and idealized toy assumptions (<MathBlock inline tex="\mathcal{A} = \varepsilon = 1" />).
+    </Marginalia>
+
+    <Callout kind="note" title="Three Levels of Verification">
+      Keep <strong>bit-for-bit reproducibility</strong> (same code, pinned stack, fixed seed),{' '}
+      <strong>statistical reproducibility</strong> (different seeds/hardware within MC variance),
+      and <strong>scientific replicability</strong> (independent dataset or software) clearly distinct.
+    </Callout>
+  </Section>
+
+  <Section kind="steps" id="three-pass" title="The ComPart Three-Pass Study Cycle">
+    <Steps title="Closed Verification Loop Across Every Technical Module">
+      <Step n={1} title="Pass 1 — Analytic First Principles" meta="Level 1">
+        Derive the governing equations, state metric and natural-unit conventions explicitly, and
+        check dimensional consistency and limiting regimes.
+      </Step>
+      <Step n={2} title="Pass 2 — First-Principles Computational Verification" meta="Levels 1–2">
+        Write a transparent Python or C++ implementation reproducing Pass 1, testing edge cases and
+        visualizing parameter dependencies with annotated Plotly plots.
+      </Step>
+      <Step n={3} title="Pass 3 — Production HEP Tooling & Closure Audit" meta="Levels 3–4">
+        Execute the same task in Key4hep/EDM4hep, <code>ROOT::RDataFrame</code>, Geant4, or
+        Scikit-HEP and audit any discrepancy against Pass 2 (units, API defaults, radiative tails).
+      </Step>
+    </Steps>
+  </Section>
+
+  <Section kind="derivation" id="cancellation" title="Catastrophic Cancellation in Four-Vectors">
+    <Derivation title="Why HEP Data Models Store (pT, η, φ, m) Explicitly" collapsible={true}>
+      <p>
+        For an ultra-relativistic <MathBlock inline tex="100\,\text{GeV}" /> electron (
+        <MathBlock inline tex="m_e / E \approx 5.1 \times 10^{-6}" />), recovering the rest mass from
+        Cartesian components <MathBlock inline tex="(E, \mathbf{p})" /> subtracts two nearly equal
+        large numbers:
+      </p>
+      <MathBlock
+        tex="\frac{E^2 - |\mathbf{p}|^2}{E^2} = \left(\frac{m_e}{E}\right)^2 \approx 2.6 \times 10^{-11} \ll \epsilon_{\text{float32}} \approx 1.2 \times 10^{-7}"
+        eq="4.1"
+        highlight={true}
+      />
+      <p>
+        Factoring the difference of squares improves conditioning in <code>float64</code>, but still
+        loses precision at TeV energies:
+      </p>
+      <MathBlock
+        tex="m = \sqrt{(E - |\mathbf{p}|)(E + |\mathbf{p}|)}"
+        eq="4.2"
+      />
+      <div slot="result">
+        In <code>float32</code>, naive <MathBlock inline tex="\sqrt{E^2 - |\mathbf{p}|^2}" />{' '}
+        suffers <strong>100% catastrophic cancellation</strong> (returning{' '}
+        <MathBlock inline tex="0.0\,\text{GeV}" />), which is why modern HEP formats store{' '}
+        <MathBlock inline tex="(p_T, \eta, \phi, m)" /> directly.
+      </div>
+    </Derivation>
+  </Section>
+
+  <Section kind="example" id="software-stack" title="Key4hep Stack & Columnar Throughput">
+    <MindMap title="Key4hep Turnkey Architecture" spec={key4hepGraph} />
+
+    <Figure n="3.2" span="wide">
+      <Plotly
+        id="demo-throughput"
+        data={throughputData}
+        layout={{
+          title: 'Dimuon Invariant-Mass Throughput: Loop vs. Vectorized Columnar',
+          xaxis: { title: 'Event Count N', type: 'log' },
+          yaxis: { title: 'Throughput [events / s]', type: 'log' },
+        }}
+        script="scripts/fig_0_2_4_loop_vs_vectorized.py"
+      />
+      <span slot="caption">
+        Columnar vectorization sustains a 36–51× speedup over scalar Python loops from cache-resident
+        (<MathBlock inline tex="N = 10^4" />) to RAM-bandwidth-limited (<MathBlock inline tex="N = 3\times 10^5" />) regimes.
+      </span>
+    </Figure>
+  </Section>
+
+  <Section kind="lab" form="column" id="lab-0-2" title="Physics Unit Tests & Problem Set 0.2">
+    <Code
+      category="algo"
+      lang="python"
+      title="sec4_physics_invariants_test.py"
+      env="Python 3.12 · NumPy · SeedSequence"
+      code={invariantTestCode}
+    />
+
+    <Exercise n="0.2.1" effort="check">
+      Audit a workflow that sources a floating Key4hep nightly, shares one global{' '}
+      <code>TRandom3</code> inside <code>ROOT::EnableImplicitMT(8)</code>, and stores{' '}
+      <code>float32</code> electron four-vectors to recover <MathBlock inline tex="m_e" /> via{' '}
+      <MathBlock inline tex="\sqrt{E^2 - |\mathbf{p}|^2}" />. Identify all reproducibility,
+      concurrency, and numerical defects and prescribe fixes.
+    </Exercise>
+
+    <Exercise n="0.2.3" effort="implement">
+      Generate <MathBlock inline tex="N = 10^5" /> synthetic{' '}
+      <MathBlock inline tex="Z \to \mu^+\mu^-" /> events with deterministic per-entry seeding in{' '}
+      <code>ROOT::RDataFrame</code> (or Awkward/Vector), apply{' '}
+      <MathBlock inline tex="p_T^\mu > 20\,\text{GeV}" /> and{' '}
+      <MathBlock inline tex="|\eta^\mu| < 2.5" />, and run a Pass 2 ↔ Pass 3 closure check against
+      a standalone NumPy script.
+    </Exercise>
+  </Section>
+</LectureLayout>

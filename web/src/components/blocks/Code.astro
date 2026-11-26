@@ -1,0 +1,62 @@
+---
+export type CodeCategory = 'viz' | 'algo' | 'hep';
+
+interface Props {
+  code: string;
+  lang?: string;
+  title?: string;
+  category?: CodeCategory;
+  env?: string;
+  span?: 'main' | 'wide';
+}
+
+const {
+  code,
+  lang = 'python',
+  title,
+  category,
+  env,
+  span = 'main',
+} = Astro.props;
+
+const categoryStyles: Record<CodeCategory, { label: string; cls: string }> = {
+  viz:  { label: 'Viz',      cls: 'text-orion-40 border-orion-50' },
+  algo: { label: 'Algo/Demo', cls: 'text-sky-30 border-sky-50' },
+  hep:  { label: 'HEP Lib',  cls: 'text-emerald-30 border-emerald-50' },
+};
+
+const spans = { main: '', wide: 'lg:col-span-full' } as const;
+const trimmed = code.replace(/^\n+|\n+$/g, '');
+---
+<div
+  class={`my-8 border border-rule bg-slate-100 text-slate-10 on-dark:bg-slate-90 on-dark:border-slate-70 ${spans[span]}`}
+  data-code-block
+>
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-70 px-4 py-2.5">
+    <div class="flex flex-wrap items-center gap-2.5">
+      {category && (
+        <span class={`border px-2 py-0.5 font-code text-label uppercase ${categoryStyles[category].cls}`}>
+          {categoryStyles[category].label}
+        </span>
+      )}
+      {title && (
+        <span class="font-code text-small text-slate-10">{title}</span>
+      )}
+      <span class="font-code text-label uppercase text-slate-40">{lang}</span>
+      {env && (
+        <span class="font-code text-label text-slate-40">· {env}</span>
+      )}
+    </div>
+
+    <button
+      type="button"
+      data-copy-code
+      class="cursor-pointer border border-slate-70 px-2.5 py-1 font-code text-label uppercase text-slate-30
+             transition hover:border-orion-40 hover:text-white"
+    >
+      Copy
+    </button>
+  </div>
+
+  <pre class="m-0 overflow-x-auto p-4 font-code text-small leading-relaxed text-slate-10"><code data-code-source>{trimmed}</code></pre>
+</div>

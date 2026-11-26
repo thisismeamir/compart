@@ -1,0 +1,92 @@
+---
+type Align = 'left' | 'right' | 'center';
+
+interface Props {
+  caption?: string;
+  number?: string;
+  source?: string;
+  headers?: string[];
+  rows?: (string | number)[][];
+  align?: Align[];
+  numericCols?: number[];
+  span?: 'main' | 'wide';
+}
+
+const {
+  caption,
+  number,
+  source,
+  headers = [],
+  rows = [],
+  align = [],
+  numericCols = [],
+  span = 'wide',
+} = Astro.props;
+
+const spans = { main: '', wide: 'lg:col-span-full' } as const;
+const numericSet = new Set(numericCols);
+
+const alignClass = (colIdx: number): string => {
+  const a = align[colIdx] ?? (numericSet.has(colIdx) ? 'right' : 'left');
+  if (a === 'right') return 'text-right';
+  if (a === 'center') return 'text-center';
+  return 'text-left';
+};
+---
+
+<figure class={`my-10 border border-rule bg-paper text-ink ${spans[span]}`}>
+  {(caption || number) && (
+    <figcaption class="flex flex-wrap items-baseline justify-between gap-2 border-b border-rule px-5 py-3">
+      <span class="font-display text-label uppercase text-accent">
+        {number ? `Table ${number}` : 'Table'}
+      </span>
+      {caption && <span class="font-text text-small text-ink">{caption}</span>}
+    </figcaption>
+  )}
+
+  <div class="overflow-x-auto">
+    {headers.length > 0 ? (
+      <table class="w-full border-collapse text-small">
+        <thead>
+          <tr class="border-b border-rule">
+            {headers.map((h, i) => (
+              <th
+                scope="col"
+                class={`whitespace-nowrap px-4 py-2.5 font-display text-label uppercase text-muted ${alignClass(i)}`}
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-rule">
+          {rows.map((row) => (
+            <tr>
+              {row.map((cell, i) => (
+                <td
+                  class={`px-4 py-2.5 align-top ${alignClass(i)} ${
+                    numericSet.has(i)
+                      ? 'font-code tabular-nums text-ink'
+                      : 'font-text text-ink'
+                  }`}
+                >
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ) : (
+      <div class="p-4 [&_table]:w-full [&_table]:border-collapse [&_th]:border-b [&_th]:border-rule [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:font-display [&_th]:text-label [&_th]:uppercase [&_th]:text-muted [&_td]:border-b [&_td]:border-rule [&_td]:px-3 [&_td]:py-2 [&_td]:font-text [&_td]:text-small">
+        <slot />
+      </div>
+    )}
+  </div>
+
+  {source && (
+    <p class="m-0 border-t border-rule px-5 py-2.5 font-code text-label text-muted">
+      Source: {source}
+    </p>
+  )}
+</figure>

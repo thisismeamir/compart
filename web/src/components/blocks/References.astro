@@ -1,0 +1,39 @@
+---
+import type { ReferenceItem } from '../data/curriculum';
+
+interface Props {
+  references: ReferenceItem[];
+  columns?: 1 | 2;
+  span?: 'main' | 'wide';
+}
+
+const { references, columns = 2, span = 'wide' } = Astro.props;
+const spans = { main: '', wide: 'lg:col-span-full' } as const;
+---
+
+<ol
+  class={`m-0 grid list-none gap-x-10 gap-y-3 pl-0 font-text text-small leading-relaxed text-ink ${
+    columns === 2 ? 'md:grid-cols-2' : ''
+  } ${spans[span]}`}
+>
+  {references.map((ref) => (
+    <li
+      id={`ref-${ref.index}`}
+      class="scroll-mt-24 border-l-2 border-transparent pl-3 transition target:border-accent"
+    >
+      <span class="mr-2 font-code text-label text-accent">[{ref.index}]</span>
+      {ref.url ? (
+        <a
+          href={ref.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="transition hover:text-accent hover:underline"
+        >
+          {ref.text}
+        </a>
+      ) : (
+        <span>{ref.text}</span>
+      )}
+    </li>
+  ))}
+</ol>

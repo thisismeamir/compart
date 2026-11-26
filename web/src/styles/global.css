@@ -1,0 +1,313 @@
+/* src/styles/global.css */
+@import "tailwindcss";
+
+/* ==========================================================================
+   Theme tokens
+   ========================================================================== */
+
+@theme {
+  /* ---- Palette (default Tailwind colors removed) ---- */
+  --color-*: initial;
+
+  --color-white: #ffffff;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Slate / neutral */
+  --color-slate-10: #E8E8E8;
+  --color-slate-20: #E0E0E0;
+  --color-slate-30: #C6C6C6;
+  --color-slate-40: #A8A8A8;
+  --color-slate-50: #8D8D8D;
+  --color-slate-60: #3C3C3C;
+  --color-slate-70: #303030;
+  --color-slate-80: #242424;
+  --color-slate-90: #181818;
+  --color-slate-100: #0C0C0C;
+
+  /* Orion / violet */
+  --color-orion-10: #E5E3FF;
+  --color-orion-20: #CAC6FF;
+  --color-orion-30: #B2ACFF;
+  --color-orion-40: #948CFF;
+  --color-orion-50: #7152FF;
+  --color-orion-60: #6C22FF;
+  --color-orion-70: #5412C0;
+  --color-orion-80: #380C80;
+  --color-orion-90: #240A4F;
+  --color-orion-100: #160434;
+
+  /* Royal blue (renamed from the duplicate --blue) */
+  --color-royal-10: #617EFF;
+  --color-royal-20: #4F6FFF;
+  --color-royal-30: #4063FF;
+  --color-royal-40: #2B52FF;
+  --color-royal-50: #1741FF;
+  --color-royal-60: #143AE0;
+  --color-royal-70: #1131BF;
+  --color-royal-80: #0B2180;
+  --color-royal-90: #061040;
+  --color-royal-100: #030921;
+
+  /* Sky / blue */
+  --color-sky-10: #E5F6FF;
+  --color-sky-20: #BAE6FF;
+  --color-sky-30: #82CFFF;
+  --color-sky-40: #33B1FF;
+  --color-sky-50: #1192E8;
+  --color-sky-60: #0072C3;
+  --color-sky-70: #00539A;
+  --color-sky-80: #003A6D;
+  --color-sky-90: #012749;
+  --color-sky-100: #061727;
+
+  /* Cyan / teal */
+  --color-cyan-10: #D9FBFB;
+  --color-cyan-20: #9EF0F0;
+  --color-cyan-30: #3DDBD9;
+  --color-cyan-40: #08BDBA;
+  --color-cyan-50: #009D9A;
+  --color-cyan-60: #007D79;
+  --color-cyan-70: #005D5D;
+  --color-cyan-80: #004144;
+  --color-cyan-90: #022B30;
+  --color-cyan-100: #081A1C;
+
+  /* Emerald / green */
+  --color-emerald-10: #DEFBE6;
+  --color-emerald-20: #A7F0BA;
+  --color-emerald-30: #6FDC8C;
+  --color-emerald-40: #42BE65;
+  --color-emerald-50: #24A148;
+  --color-emerald-60: #198038;
+  --color-emerald-70: #0E6027;
+  --color-emerald-80: #044317;
+  --color-emerald-90: #022D0D;
+  --color-emerald-100: #071908;
+
+  /* Yellow / amber */
+  --color-yellow-10: #FCF4D6;
+  --color-yellow-20: #FDDC69;
+  --color-yellow-30: #F1C21B;
+  --color-yellow-40: #D2A106;
+  --color-yellow-50: #B28600;
+  --color-yellow-60: #8E6A00;
+  --color-yellow-70: #684E00;
+  --color-yellow-80: #483700;
+  --color-yellow-90: #302400;
+  --color-yellow-100: #1C1500;
+
+  /* Orange */
+  --color-orange-10: #FFF2E8;
+  --color-orange-20: #FFD9BE;
+  --color-orange-30: #FFB784;
+  --color-orange-40: #FF832B;
+  --color-orange-50: #EB6200;
+  --color-orange-60: #BA4E00;
+  --color-orange-70: #8A3800;
+  --color-orange-80: #5E2900;
+  --color-orange-90: #3E1A00;
+  --color-orange-100: #231000;
+
+  /* Red */
+  --color-red-10: #FFF1F1;
+  --color-red-20: #FFD7D9;
+  --color-red-30: #FFB3B8;
+  --color-red-40: #FF8389;
+  --color-red-50: #FA4D56;
+  --color-red-60: #DA1E28;
+  --color-red-70: #A2191F;
+  --color-red-80: #700F14;
+  --color-red-90: #520408;
+  --color-red-100: #2D0709;
+
+  /* Pink / magenta */
+  --color-pink-10: #FFF0F7;
+  --color-pink-20: #FFD6E8;
+  --color-pink-30: #FFAFD2;
+  --color-pink-40: #FF7EB6;
+  --color-pink-50: #EE5396;
+  --color-pink-60: #D02670;
+  --color-pink-70: #9F1853;
+  --color-pink-80: #740937;
+  --color-pink-90: #510224;
+  --color-pink-100: #2A0A18;
+
+  /* Off-scale accent shared with figure style */
+  --color-accent-figure: #7017ff;
+
+  /* ---- Font families ---- */
+  --font-display: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-text: "IBM Plex Serif", ui-serif, Georgia, serif;
+  --font-code: "IBM Plex Mono", ui-monospace, monospace;
+  --font-math: "IBM Plex Math", "IBM Plex Serif", serif;
+
+  /* ---- Type scale (reading subset of the IBM scale) ---- */
+  --text-*: initial;
+
+  --text-label: 0.75rem;
+  --text-label--line-height: 1rem;
+  --text-label--letter-spacing: 0.08em;
+
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.25rem;
+
+  --text-body: 1.125rem;
+  --text-body--line-height: 1.7;
+
+  --text-h4: 1.5rem;
+  --text-h4--line-height: 1.75rem;
+
+  --text-h3: 2rem;
+  --text-h3--line-height: 2.5rem;
+
+  --text-h2: 2.625rem;
+  --text-h2--line-height: 3.125rem;
+
+  --text-h1: 3.375rem;
+  --text-h1--line-height: 4rem;
+  --text-h1--letter-spacing: -0.015em;
+
+  --text-numeral: 5.75rem;
+  --text-numeral--line-height: 1;
+  --text-numeral--letter-spacing: -0.03em;
+}
+
+/* ==========================================================================
+   Semantic color roles (remapped per surface)
+   ========================================================================== */
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-accent: var(--accent);
+}
+
+:root {
+  --paper: var(--color-white);
+  --ink: var(--color-slate-90);
+  --muted: var(--color-slate-50);
+  --rule: var(--color-slate-20);
+  --accent: var(--color-accent-figure);
+}
+
+[data-surface='inset'] {
+  --paper: var(--color-slate-10);
+  --rule: var(--color-slate-30);
+}
+
+[data-surface='raised'] {
+  --paper: var(--color-white);
+  --rule: var(--color-orion-20);
+}
+
+[data-surface='dark'] {
+  --paper: var(--color-slate-100);
+  --ink: var(--color-slate-10);
+  --muted: var(--color-slate-40);
+  --rule: var(--color-slate-70);
+  --accent: var(--color-orion-40);
+}
+
+:root[data-theme='dark'] {
+  --paper: var(--color-slate-100);
+  --ink: var(--color-slate-10);
+  --muted: var(--color-slate-40);
+  --rule: var(--color-slate-70);
+  --accent: var(--color-orion-40);
+}
+
+[data-theme='dark'] [data-surface='inset'] {
+  --paper: var(--color-slate-90);
+  --rule: var(--color-slate-70);
+}
+
+[data-theme='dark'] [data-surface='raised'] {
+  --paper: var(--color-slate-80);
+  --rule: var(--color-orion-80);
+}
+
+/* ==========================================================================
+   Surface variants (for structurally different treatments only)
+   ========================================================================== */
+
+@custom-variant on-dark (&:where([data-surface=dark] *, [data-theme=dark] *));
+@custom-variant on-inset (&:where([data-surface=inset] *));
+@custom-variant on-raised (&:where([data-surface=raised] *));
+
+/* ==========================================================================
+   Lecture grid and column spans
+   ========================================================================== */
+
+@utility lecture-grid {
+  display: grid;
+  grid-template-columns:
+    [full-start] minmax(1rem, 1fr) [wide-start] minmax(0, 6rem) [main-start] minmax(0, 42rem) [main-end] [margin-start] minmax(12rem, 16rem) [margin-end] minmax(0, 6rem) [wide-end] minmax(1rem, 1fr) [full-end];
+}
+
+@utility col-main {
+  grid-column: main-start / main-end;
+}
+
+@utility col-main-margin {
+  grid-column: main-start / margin-end;
+}
+
+@utility col-wide {
+  grid-column: wide-start / wide-end;
+}
+
+@utility col-full {
+  grid-column: full-start / full-end;
+}
+
+/* ==========================================================================
+   Fonts
+   Sans, Serif and Mono come from Google Fonts via <link> in the base layout.
+   Plex Math is not on Google Fonts, so it is self-hosted.
+   ========================================================================== */
+
+@font-face {
+  font-family: "IBM Plex Math";
+  src: url("/fonts/IBMPlexMath-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ==========================================================================
+   Base: lecture prose and math
+   ========================================================================== */
+
+@layer base {
+  .lecture h2 {
+    @apply font-display text-h2 font-light text-ink;
+  }
+
+  .lecture h3 {
+    @apply font-display text-h3 font-light text-ink;
+  }
+
+  .lecture p {
+    @apply font-text text-body text-ink;
+  }
+
+  .lecture a {
+    @apply text-accent underline underline-offset-4;
+  }
+
+  .lecture p+p {
+    @apply mt-5;
+  }
+
+  .section__body>* {
+    @apply lg:col-start-1;
+  }
+
+  .katex {
+    font-family: var(--font-math);
+    font-size: 1em;
+  }
+}

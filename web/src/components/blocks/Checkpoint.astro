@@ -1,0 +1,34 @@
+---
+interface Props {
+  title?: string;
+  lead?: string;
+  items?: string[];
+  span?: 'main' | 'wide';
+}
+
+const {
+  title = 'Checkpoint',
+  lead = 'You should now be able to',
+  items = [],
+  span = 'main',
+} = Astro.props;
+
+const spans = { main: '', wide: 'lg:col-span-full' } as const;
+---
+
+<aside class={`my-10 border border-rule border-l-2 border-l-accent bg-paper p-6 text-ink ${spans[span]}`}>
+  <p class="m-0 font-display text-label uppercase text-accent">{title}</p>
+  <p class="m-0 mt-1 font-display text-h4 font-light text-ink">{lead}</p>
+
+  {items.length > 0 ? (
+    <ul class="m-0 mt-4 flex list-[square] flex-col gap-2 pl-4 font-text text-small leading-relaxed text-ink">
+      {items.map((item) => (
+        <li>{item}</li>
+      ))}
+    </ul>
+  ) : (
+    <div class="mt-4 font-text text-small leading-relaxed text-ink">
+      <slot />
+    </div>
+  )}
+</aside>

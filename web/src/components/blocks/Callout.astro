@@ -1,0 +1,16 @@
+---
+// src/components/blocks/Callout.astro
+import { callouts, type CalloutKind } from '../../theme/callouts';
+
+interface Props { kind?: CalloutKind; title?: string }
+const { kind = 'note', title } = Astro.props;
+const def = callouts[kind];
+---
+<aside class={`my-8 border-l-2 pl-5 ${def.rail}`}>
+  <p class={`font-display text-label uppercase ${def.tag}`}>
+    {def.label}{title && <span class="text-muted"> · {title}</span>}
+  </p>
+  <div class="mt-2 font-text text-body text-ink">
+    <slot />
+  </div>
+</aside>

@@ -1,0 +1,24 @@
+---
+interface Props {
+  id: number | number[];
+  title?: string;
+}
+
+const { id, title } = Astro.props;
+const ids = Array.isArray(id) ? id : [id];
+---
+
+<sup class="font-code text-[0.75em] leading-none text-accent">
+  <span>[</span>{ids.map((n, i) => (
+    <>
+      {i > 0 && <span>, </span>}
+      <a
+        href={`#ref-${n}`}
+        title={title ?? `Reference ${n}`}
+        class="underline-offset-2 transition hover:underline"
+      >
+        {n}
+      </a>
+    </>
+  ))}<span>]</span>
+</sup>

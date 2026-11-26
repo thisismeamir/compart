@@ -1,0 +1,158 @@
+---
+import TrackLayout from '../../layouts/TrackLayout.astro';
+import TrackMap from '../../components/TrackMap.astro';
+import {
+  manifest,
+  partsByNumber,
+  formatSubset,
+  type TrackEntry,
+  type PartEntry,
+  type LectureEntry,
+} from '../../data/curriculum';
+
+interface ResolvedStop {
+  index: number;
+  part: PartEntry;
+  subset: string | null;
+  lectures: LectureEntry[];
+}
+
+export function getStaticPaths() {
+  return manifest.tracks.map((track, idx) => {
+    const prev = idx > 0 ? manifest.tracks[idx - 1] : undefined;
+    const next = idx < manifest.tracks.length - 1 ? manifest.tracks[idx + 1] : undefined;
+
+    const resolvedStops: ResolvedStop[] = track.stops.map((stop, i) => {
+      const part = partsByNumber[stop.part];
+      const subset = formatSubset(stop.lectures);
+      const lectures =
+        stop.lectures === 'all'
+          ? part.lectures
+          : part.lectures.filter((l) => stop.lectures.includes(l.id));
+
+      return { index: i + 1, part, subset, lectures };
+    });
+
+    const lectureCount = resolvedStops.reduce((sum, s) => sum + s.lectures.length, 0);
+    const targetedCount = resolvedStops.filter((s) => s.subset !== null).length;
+
+    return {
+      params: { track: track.id },
+      props: {
+        track,
+        resolvedStops,
+        lectureCount,
+        targetedCount,
+        prevTrack: prev ? { label: prev.name, href: `/tracks/${prev.id}` } : undefined,
+        nextTrack: next ? { label: next.name, href: `/tracks/${next.id}` } : undefined,
+      },
+    };
+  });
+}
+
+interface Props {
+  track: TrackEntry;
+  resolvedStops: ResolvedStop[];
+  lectureCount: number;
+  targetedCount: number;
+  prevTrack?: { label: string; href: string };
+  nextTrack?: { label: string; href: string };
+}
+
+const { track, resolvedStops, lectureCount, targetedCount, prevTrack, nextTrack } = Astro.props;
+---
+
+<TrackLayout
+  trackId={track.id}
+  name={track.name}
+  focus={track.focus}
+  pathSummary={track.path}
+  partCount={resolvedStops.length}
+  lectureCount={lectureCount}
+  targetedCount={targetedCount}
+  prevTrack={prevTrack}
+  nextTrack={nextTrack}
+>
+  <section data-surface="dark" class="border-b border-rule bg-paper py-16 text-ink">
+    <div class="mx-auto max-w-6xl px-6">
+      <p class="font-display text-label uppercase text-accent">Progression Graph</p>
+      <h2 class="mt-2 font-display text-h2 font-light text-ink">{track.name} Map</h2>
+      <div class="mt-8">
+        <TrackMap trackId={track.id} interactive={true} span="wide" />
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-paper py-16 text-ink">
+    <div class="mx-auto max-w-6xl px-6">
+      <p class="font-display text-label uppercase text-accent">Ordered Curriculum</p>
+      <h2 class="mt-2 font-display text-h2 font-light text-ink">
+        Track Milestones ({resolvedStops.length} Parts · {lectureCount} Lectures)
+      </h2>
+
+      <div class="mt-10 space-y-10">
+        {resolvedStops.map((stop) => (
+          <article class="border-t border-rule pt-8">
+            <div class="flex flex-wrap items-baseline justify-between gap-4">
+              <div>
+                <div class="flex flex-wrap items-center gap-2 font-code text-label uppercase">
+                  <span class="text-accent">Step {String(stop.index).padStart(2, '0')}</span>
+                  <span class="text-muted">· Part {stop.part.number}</span>
+                  <span class="text-muted">· Level {stop.part.level}</span>
+                  {stop.subset ? (
+                    <span class="border border-accent px-2 py-0.5 text-accent">
+                      Lectures {stop.subset}
+                    </span>
+                  ) : (
+                    <span class="border border-rule px-2 py-0.5 text-muted">
+                      Full Part ({stop.lectures.length} lec)
+                    </span>
+                  )}
+                </div>
+
+                <h3 class="mt-2 font-display text-h4 font-light text-ink">
+                  <a href={`/parts/${stop.part.slug}`} class="transition hover:text-accent">
+                    {stop.part.title}
+                  </a>
+                </h3>
+              </div>
+
+              <a
+                href={`/parts/${stop.part.slug}`}
+                class="shrink-0 font-code text-label uppercase text-accent transition hover:underline"
+              >
+                Part {stop.part.number} Overview →
+              </a>
+            </div>
+
+            <div class="mt-5 divide-y divide-rule border-t border-b border-rule">
+              {stop.lectures.map((lec) => (
+                <a href={`/lectures/${lec.slug}`} class="group flex flex-wrap items-baseline justify-between gap-3 py-3.5 transition">
+                  <div class="min-w-0">
+                    <span class="font-code text-label uppercase text-accent">Lecture {lec.id}</span>
+                    <span class="mx-2 text-muted">·</span>
+                    <span class="font-display text-small text-ink transition group-hover:text-accent">
+                      {lec.title}
+                    </span>
+                  </div>
+                  <div class="flex shrink-0 items-center gap-2 font-code text-label uppercase">
+                    <span class="text-muted">{lec.level}</span>
+                    <span
+                      class={`border px-2 py-0.5 ${
+                        lec.status === 'published'
+                          ? 'border-accent bg-accent text-white'
+                          : 'border-rule text-muted'
+                      }`}
+                    >
+                      {lec.status}
+                    </span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+</TrackLayout>

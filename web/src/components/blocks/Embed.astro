@@ -1,0 +1,60 @@
+---
+interface Props {
+  src: string;
+  title: string;
+  caption?: string;
+  kind?: 'video' | 'display' | 'embed';
+  aspect?: '16/9' | '4/3' | '16/10' | '1/1';
+  span?: 'main' | 'wide';
+}
+
+const {
+  src,
+  title,
+  caption,
+  kind = 'embed',
+  aspect = '16/9',
+  span = 'wide',
+} = Astro.props;
+
+const spans = { main: '', wide: 'lg:col-span-full' } as const;
+const labels = { video: 'Video', display: 'Event Display', embed: 'Interactive Embed' } as const;
+const aspectClasses = {
+  '16/9': 'aspect-video',
+  '4/3': 'aspect-[4/3]',
+  '16/10': 'aspect-[16/10]',
+  '1/1': 'aspect-square',
+} as const;
+---
+
+<figure class={`my-10 border border-rule bg-paper text-ink ${spans[span]}`}>
+  <div class="flex flex-wrap items-center justify-between gap-2 border-b border-rule px-5 py-2.5">
+    <span class="font-display text-label uppercase text-accent">
+      {labels[kind]} · {title}
+    </span>
+    <a
+      href={src}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="font-code text-label uppercase text-muted transition hover:text-accent"
+    >
+      Open ↗
+    </a>
+  </div>
+
+  <div class={`w-full ${aspectClasses[aspect]}`}>
+    <iframe
+      src={src}
+      title={title}
+      loading="lazy"
+      allowfullscreen
+      class="h-full w-full border-0"
+    />
+  </div>
+
+  {caption && (
+    <figcaption class="border-t border-rule px-5 py-3 font-text text-small text-muted">
+      {caption}
+    </figcaption>
+  )}
+</figure>

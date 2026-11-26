@@ -1,0 +1,162 @@
+---
+import Mindmap, { type GraphSpec, type GraphNode, type GraphEdge } from './blocks/MindMap.astro';
+import {
+  tracksById,
+  partsByNumber,
+  compactTitle,
+  formatSubset,
+  type TrackId,
+} from '../data/curriculum';
+
+interface Props {
+  trackId: TrackId;
+  interactive?: boolean;
+  span?: 'main' | 'wide';
+}
+
+const { trackId, interactive = true, span = 'wide' } = Astro.props;
+
+const track = tracksById[trackId];
+const cols = track.stops.length === 10 ? 5 : 4;
+const rows = Math.ceil(track.stops.length / cols);
+
+const nodes: GraphNode[] = track.stops.map((stop, i) => {
+  const part = partsByNumber[stop.part];
+  const row = Math.floor(i / cols);
+  const pos = i % cols;
+  const col = row % 2 === 0 ? pos : cols - 1 - pos;
+  const step = Math.min(3, Math.floor((i * 3) / track.stops.length) + 1);
+  const subset = formatSubset(stop.lectures);
+
+  const variant: GraphNode['variant'] =
+    part.number === 0 || part.number === 14
+      ? 'muted'
+      : subset
+        ? 'accent'
+        : 'base';
+
+  const kicker = subset
+    ? `P${part.number} (${subset}) · ${part.level}`
+    : `P${part.number} · ${part.level} · ${part.lectureCount} lec`;
+
+  return {
+    id: `p${part.number}`,
+    col,
+    row,
+    variant,
+    kicker,
+    title: compactTitle(part.title),
+    step,
+  };
+});
+
+const edges: GraphEdge[] = track.stops.slice(0, -1).map((stop, i) => {
+  const next = track.stops[i + 1];
+  const step = Math.min(3, Math.floor(((i + 1) * 3) / track.stops.length) + 1);
+  const isSubsetEdge = stop.lectures !== 'all' || next.lectures !== 'all';
+  return {
+    from: `p${stop.part}`,
+    to: `p${next.part}`,
+    style: isSubsetEdge ? 'dashed' : 'solid',
+    step,
+  };
+});
+
+const spec: GraphSpec = {
+  grid: { cols, rows },
+  nodes,
+  edges,
+};
+
+const stopMeta = track.stops.map((stop) => {
+  const part = partsByNumber[stop.part];
+  const subset = formatSubset(stop.lectures);
+  const targetedTitles =
+    stop.lectures === 'all'
+      ? []
+      : part.lectures
+          .filter((l) => stop.lectures.includes(l.id))
+          .map((l) => `${l.id}: ${compactTitle(l.title)}`);
+
+  return {
+    id: `p${part.number}`,
+    part: part.number,
+    slug: part.slug,
+    title: part.title,
+    level: part.level,
+    lectureCount: part.lectureCount,
+    subset,
+    targetedTitles,
+  };
+});
+---
+
+<div data-track-map class="space-y-4">
+  <Mindmap
+    spec={spec}
+    title={`${track.name} Progression (${track.stops.length} Milestones)`}
+    interactive={interactive}
+    span={span}
+  />
+
+  <div class="flex flex-wrap items-start justify-between gap-4 border border-rule bg-paper px-5 py-4 text-ink">
+    <div class="min-w-0 max-w-3xl space-y-1">
+      <p data-tm-meta class="m-0 font-code text-label uppercase text-muted">
+        Part {stopMeta[0].part} · Level {stopMeta[0].level} · {stopMeta[0].subset ? `Lectures ${stopMeta[0].subset}` : `${stopMeta[0].lectureCount} Lectures`}
+      </p>
+      <p data-tm-title class="m-0 font-display text-h4 font-light">
+        {stopMeta[0].title}
+      </p>
+      <p data-tm-detail class="m-0 font-text text-small text-muted hidden" />
+    </div>
+
+    <a
+      data-tm-link
+      href={`/parts/${stopMeta[0].slug}`}
+      class="shrink-0 border border-accent bg-accent px-3 py-1.5 font-code text-label uppercase text-white transition hover:opacity-90"
+    >
+      Open Part {stopMeta[0].part} →
+    </a>
+  </div>
+
+  <script type="application/json" data-tm-stops set:html={JSON.stringify(stopMeta)} />
+</div>
+
+<script>
+  document.querySelectorAll('[data-track-map]').forEach((root) => {
+    const raw = root.querySelector('[data-tm-stops]')?.textContent;
+    if (!raw) return;
+    const stops = JSON.parse(raw);
+    const byId = Object.fromEntries(stops.map((s: any) => [s.id, s]));
+
+    const metaEl = root.querySelector('[data-tm-meta]');
+    const titleEl = root.querySelector('[data-tm-title]');
+    const detailEl = root.querySelector('[data-tm-detail]');
+    const linkEl = root.querySelector('[data-tm-link]');
+
+    root.querySelectorAll('[data-mm-node]').forEach((el) => {
+      el.classList.add('cursor-pointer');
+      el.addEventListener('click', () => {
+        const s = byId[el.getAttribute('data-mm-node') ?? ''];
+        if (!s) return;
+        if (metaEl) {
+          metaEl.textContent = `Part ${s.part} · Level ${s.level} · ${s.subset ? `Targeted Lectures: ${s.subset}` : `Full Part (${s.lectureCount} Lectures)`}`;
+        }
+        if (titleEl) titleEl.textContent = s.title;
+        if (detailEl) {
+          if (s.targetedTitles.length > 0) {
+            detailEl.textContent = s.targetedTitles.join(' · ');
+            detailEl.classList.remove('hidden');
+          } else {
+            detailEl.textContent = '';
+            detailEl.classList.add('hidden');
+          }
+        }
+        if (linkEl) {
+          linkEl.setAttribute('href', `/parts/${s.slug}`);
+          linkEl.textContent = `Open Part ${s.part} →`;
+        }
+      });
+    });
+  });
+</script>

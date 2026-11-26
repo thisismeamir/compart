@@ -1,0 +1,9 @@
+---
+// src/components/blocks/FigurePanel.astro
+interface Props { label?: string }
+const { label } = Astro.props;
+---
+<div>
+  <slot />
+  {label && <p class="mt-2 font-code text-label uppercase text-muted">({label})</p>}
+</div>

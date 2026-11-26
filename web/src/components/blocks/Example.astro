@@ -1,0 +1,37 @@
+---
+interface Props {
+  title: string;
+  label?: string;
+  number?: string;
+  span?: 'main' | 'wide';
+}
+
+const {
+  title,
+  label = 'Worked Example',
+  number,
+  span = 'main',
+} = Astro.props;
+
+const spans = { main: '', wide: 'lg:col-span-full' } as const;
+const hasResult = Astro.slots.has('result');
+---
+
+<article class={`my-10 border border-rule bg-paper text-ink ${spans[span]}`}>
+  <header class="flex flex-wrap items-baseline justify-between gap-2 border-b border-rule px-5 py-3">
+    <span class="font-display text-label uppercase text-accent">
+      {number ? `${label} ${number}` : label}
+    </span>
+    <h4 class="m-0 font-display text-h4 font-light text-ink">{title}</h4>
+  </header>
+
+  <div class="space-y-4 p-5 font-text text-small leading-relaxed text-ink">
+    <slot />
+  </div>
+
+  {hasResult && (
+    <div class="border-t border-rule px-5 py-3 font-text text-small text-ink">
+      <slot name="result" />
+    </div>
+  )}
+</article>

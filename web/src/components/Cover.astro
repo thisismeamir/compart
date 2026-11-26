@@ -1,0 +1,73 @@
+---
+// src/components/Cover.astro
+import { contentTypes } from '../theme/content-types';
+import Icon from './Icon.astro';
+
+const { meta, firstSectionId } = Astro.props;
+const deliverables = meta.deliverables ?? [];
+const types = meta.contentTypes ?? [];
+const prerequisites = meta.prerequisites ?? [];
+---
+<header class="grid min-h-svh grid-rows-[1fr_auto] bg-paper text-ink">
+  <div class="mx-auto grid w-full max-w-6xl gap-12 px-6 py-16 lg:grid-cols-[3fr_2fr] lg:items-center">
+    <div>
+      <p class="font-display text-label uppercase text-accent">
+        <a href={`/parts/part-${String(meta.part).padStart(2, '0')}`} class="hover:underline underline-offset-4">
+          Part {meta.part}
+        </a>
+        {' · '}Lecture {meta.number}
+        {meta.level && <span class="text-muted"> · Level {meta.level}</span>}
+      </p>
+      <h1 class="mt-4 font-display text-h1 font-light">{meta.title}</h1>
+      <p class="mt-8 max-w-prose font-text text-body text-muted">{meta.abstract}</p>
+    </div>
+
+    <dl class="grid gap-8 border-l border-rule pl-8 font-display">
+      {deliverables.length > 0 && (
+        <div>
+          <dt class="text-label uppercase text-muted">You will be able to</dt>
+          <dd>
+            <ul class="mt-3 space-y-2 text-small">
+              {deliverables.map((d: string) => <li>{d}</li>)}
+            </ul>
+          </dd>
+        </div>
+      )}
+
+      {types.length > 0 && (
+        <div>
+          <dt class="text-label uppercase text-muted">Contains</dt>
+          <dd class="mt-3 flex flex-wrap gap-2">
+            {types.map((t: keyof typeof contentTypes) => (
+              <span class="inline-flex items-center gap-1.5 border border-rule px-2.5 py-1 text-small">
+                <Icon name={contentTypes[t].icon} class="size-3.5 text-accent" />
+                {contentTypes[t].label}
+              </span>
+            ))}
+          </dd>
+        </div>
+      )}
+
+      {prerequisites.length > 0 && (
+        <div>
+          <dt class="text-label uppercase text-muted">Before this</dt>
+          <dd class="mt-3 space-y-1 text-small">
+            {prerequisites.map((p: { slug?: string; title: string }) =>
+              p.slug ? (
+                <a href={`/${p.slug}`} class="block underline underline-offset-4 hover:text-accent">
+                  {p.title}
+                </a>
+              ) : (
+                <span class="block text-muted">{p.title}</span>
+              ),
+            )}
+          </dd>
+        </div>
+      )}
+    </dl>
+  </div>
+
+  <a href={`#${firstSectionId}`} class="border-t border-rule px-6 py-4 font-display text-small hover:bg-accent hover:text-paper">
+    Begin ↓
+  </a>
+</header>

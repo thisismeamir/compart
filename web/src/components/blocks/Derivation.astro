@@ -1,0 +1,75 @@
+---
+interface Props {
+  title: string;
+  id?: string;
+  label?: string;
+  collapsible?: boolean;
+  open?: boolean;
+}
+
+const {
+  title,
+  id,
+  label = 'Derivation',
+  collapsible = false,
+  open = true,
+} = Astro.props;
+
+const hasResult = Astro.slots.has('result');
+---
+{collapsible ? (
+  <details
+    id={id}
+    open={open}
+    class="group/deriv my-8 border-y border-rule py-6 text-ink"
+  >
+    <summary class="flex cursor-pointer list-none items-baseline justify-between gap-4">
+      <div>
+        <p class="font-display text-label uppercase text-accent">{label}</p>
+        <h3 class="mt-1 font-display text-h4 font-light text-ink">{title}</h3>
+      </div>
+      <span class="font-code text-label uppercase text-muted group-open/deriv:hidden">
+        Show +
+      </span>
+      <span class="hidden font-code text-label uppercase text-muted group-open/deriv:inline">
+        Hide −
+      </span>
+    </summary>
+    <div class="mt-6 space-y-4 font-text text-body text-ink">
+      <slot />
+    </div>
+    {hasResult && (
+      <div class="mt-6 border-t border-rule pt-4">
+        <p class="font-display text-label uppercase text-emerald-60 on-dark:text-emerald-30">
+          Result
+        </p>
+        <div class="mt-2 font-text text-body text-ink">
+          <slot name="result" />
+        </div>
+      </div>
+    )}
+  </details>
+) : (
+  <div id={id} class="my-8 border-y border-rule py-6 text-ink">
+    <header>
+      <p class="font-display text-label uppercase text-accent">{label}</p>
+      <h3 class="mt-1 font-display text-h4 font-light text-ink">{title}</h3>
+    </header>
+    <div class="mt-6 space-y-4 font-text text-body text-ink">
+      <slot />
+    </div>
+    {hasResult && (
+      <div class="mt-6 flex items-start justify-between gap-4 border-t border-rule pt-4">
+        <div class="min-w-0 flex-1">
+          <p class="font-display text-label uppercase text-emerald-60 on-dark:text-emerald-30">
+            Result
+          </p>
+          <div class="mt-2 font-text text-body text-ink">
+            <slot name="result" />
+          </div>
+        </div>
+        <span class="font-math text-body text-accent" aria-hidden="true">■</span>
+      </div>
+    )}
+  </div>
+)}

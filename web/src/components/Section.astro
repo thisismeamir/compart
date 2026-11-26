@@ -1,0 +1,23 @@
+---
+// src/components/Section.astro
+import { sections, forms, type SectionKind, type Form, type Surface } from '../theme/sections';
+
+interface Props { kind: SectionKind; id: string; title: string; form?: Form; surface?: Surface }
+const { kind, id, title } = Astro.props;
+const def = sections[kind];
+const form = Astro.props.form ?? def.form;
+const surface = Astro.props.surface ?? def.surface;
+---
+<section
+  id={id}
+  data-kind={kind}
+  data-form={form}
+  data-surface={surface}
+  class="group/section col-full grid grid-cols-subgrid bg-paper py-16 text-ink px-6"
+>
+  <header class="col-[main] mb-8">
+    <p class="font-display text-label uppercase text-accent">{def.label}</p>
+    <h2 class="font-display text-h2 font-light">{title}</h2>
+  </header>
+  <div class={forms[form]}><slot /></div>
+</section>

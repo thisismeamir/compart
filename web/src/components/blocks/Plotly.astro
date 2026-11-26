@@ -1,0 +1,143 @@
+---
+// src/components/blocks/Plotly.astro
+interface Props {
+  id: string;
+  data: Record<string, unknown>[];
+  layout?: Record<string, unknown>;
+  config?: Record<string, unknown>;
+  height?: number;
+  script?: string;
+  span?: 'main' | 'wide';
+}
+
+const {
+  id,
+  data,
+  layout = {},
+  config = {},
+  height = 420,
+  script,
+  span = 'main',
+} = Astro.props;
+
+const spans = { main: '', wide: 'lg:col-span-full' } as const;
+const payload = JSON.stringify({ data, layout, config }).replace(/</g, '\\u003c');
+---
+<div class={`my-8 border border-rule bg-paper text-ink ${spans[span]}`} data-plotly-block>
+  <div
+    id={id}
+    data-plotly-canvas
+    class="w-full"
+    style={`height: ${height}px;`}
+  >
+    <div class="grid h-full place-items-center font-code text-label uppercase text-muted">
+      Loading plot…
+    </div>
+  </div>
+
+  {script && (
+    <div class="flex items-center justify-between border-t border-rule px-4 py-2 font-code text-label text-muted">
+      <span>Source script</span>
+      <span class="text-ink">{script}</span>
+    </div>
+  )}
+
+  <script type="application/json" data-plotly-spec set:html={payload} />
+</div>
+
+<script>
+  type Spec = {
+    data: any[];
+    layout: Record<string, any>;
+    config: Record<string, any>;
+  };
+
+  // Hex values from the palette: Tailwind v4 only emits --color-* variables
+  // that are used in markup, so they cannot be read reliably at runtime.
+  const COLORWAY = {
+    light: ['#6C22FF', '#0072C3', '#198038', '#BA4E00', '#D02670'],
+    dark:  ['#948CFF', '#82CFFF', '#6FDC8C', '#FFB784', '#FFAFD2'],
+  };
+
+  let plotlyPromise: Promise<any> | null = null;
+  const loadPlotly = () =>
+    (plotlyPromise ??= import('plotly.js-cartesian-dist-min').then((m) => m.default ?? m));
+
+  const isObj = (x: unknown): x is Record<string, any> =>
+    !!x && typeof x === 'object' && !Array.isArray(x);
+
+  const merge = (base: any, over: any): any => {
+    if (!isObj(over)) return over ?? base;
+    const out = { ...base };
+    for (const k of Object.keys(over)) {
+      out[k] = isObj(base?.[k]) ? merge(base[k], over[k]) : over[k];
+    }
+    return out;
+  };
+
+  const themed = (el: HTMLElement) => {
+    const css = getComputedStyle(el);
+    const v = (name: string) => css.getPropertyValue(name).trim();
+    const ink = v('--ink');
+    const rule = v('--rule');
+    const muted = v('--muted');
+    const dark = el.closest<HTMLElement>('[data-surface]')?.dataset.surface === 'dark';
+
+    const axis = {
+      gridcolor: rule,
+      linecolor: ink,
+      zerolinecolor: rule,
+      tickcolor: ink,
+      tickfont: { color: muted },
+      title: { font: { color: ink } },
+    };
+
+    return {
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)',
+      font: { family: '"IBM Plex Sans", system-ui, sans-serif', color: ink, size: 13 },
+      colorway: dark ? COLORWAY.dark : COLORWAY.light,
+      margin: { l: 56, r: 16, t: 24, b: 48 },
+      xaxis: axis,
+      yaxis: axis,
+      legend: { font: { color: ink } },
+    };
+  };
+
+  const render = async (block: HTMLElement) => {
+    const canvas = block.querySelector<HTMLElement>('[data-plotly-canvas]')!;
+    const raw = block.querySelector('[data-plotly-spec]')!.textContent!;
+    const spec: Spec = JSON.parse(raw);
+
+    try {
+      const Plotly = await loadPlotly();
+      canvas.innerHTML = '';
+      await Plotly.react(
+        canvas,
+        spec.data,
+        merge(themed(block), spec.layout),
+        { responsive: true, displaylogo: false, ...spec.config },
+      );
+      new ResizeObserver(() => Plotly.Plots.resize(canvas)).observe(block);
+    } catch (err) {
+      console.error('Plotly failed to render', err);
+      canvas.innerHTML =
+        '<div class="grid h-full place-items-center font-code text-label uppercase text-muted">Plot failed to load</div>';
+    }
+  };
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        io.unobserve(e.target);
+        render(e.target as HTMLElement);
+      }
+    },
+    { rootMargin: '300px 0px' },
+  );
+
+  document
+    .querySelectorAll<HTMLElement>('[data-plotly-block]')
+    .forEach((b) => io.observe(b));
+</script>

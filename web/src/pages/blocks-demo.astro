@@ -1,0 +1,138 @@
+---
+import LectureLayout from '../layouts/LectureLayout.astro';
+import Section from '../components/Section.astro';
+import Callout from '../components/blocks/Callout.astro';
+import Marginalia from '../components/blocks/Marginalia.astro';
+import Steps from '../components/blocks/Steps.astro';
+import Step from '../components/blocks/Step.astro';
+import MathBlock from '../components/blocks/MathBlock.astro';
+import Derivation from '../components/blocks/Derivation.astro';
+import Code from '../components/blocks/Code.astro';
+import Plotly from '../components/blocks/Plotly.astro';
+import MindMap, { type GraphSpec } from '../components/blocks/MindMap.astro';
+import Figure from '../components/blocks/Figure.astro';
+import Exercise from '../components/blocks/Exercise.astro';
+import type { LectureMeta } from '../theme/content-types';
+import type { RailSection } from '../components/ProgressRail.astro';
+
+const meta: LectureMeta = {
+  title: 'Block System Specimen',
+  part: 0,
+  number: 0,
+  abstract: 'Visual verification page exercising all lecture sections, surfaces, math, derivations, code taxonomy, Plotly charts, and progressive concept maps.',
+  deliverables: [
+    'Verify semantic surface tokens across plain, inset, raised, and dark sections',
+    'Inspect KaTeX display math, derivations, and numbered steps',
+    'Test interactive Plotly theming and MindMap orthogonal edge routing',
+  ],
+  contentTypes: ['math', 'code', 'figures', 'exercises'],
+  prerequisites: [{ slug: 'demo', title: 'None — Component Specimen' }],
+};
+
+const sections: RailSection[] = [
+  { id: 'reading',    title: 'Reading & Callouts', kind: 'prose' },
+  { id: 'derivation', title: 'Math & Derivation',  kind: 'derivation' },
+  { id: 'steps',      title: 'Procedure Steps',    kind: 'steps' },
+  { id: 'visuals',    title: 'Plotly & MindMap',   kind: 'example' },
+  { id: 'lab',        title: 'Code & Exercises',   kind: 'lab' },
+];
+
+const sampleGraph: GraphSpec = {
+  grid: { cols: 3, rows: 2 },
+  nodes: [
+    { id: 'lagrangian', col: 0, row: 0, kicker: 'Theory', title: 'Lagrangian $\\mathcal{L}$', body: 'Symmetries & couplings.', step: 0 },
+    { id: 'mc', col: 1, row: 0, kicker: 'Generator', title: 'Event Record', body: ['Parton shower', 'Hadronization'], step: 1 },
+    { id: 'det', col: 2, row: 0, variant: 'accent', kicker: 'Detector', title: 'Geant4 / DD4hep', body: 'Energy deposits & digitization.', step: 2 },
+    { id: 'reco', col: 1, row: 1, colSpan: 2, variant: 'muted', kicker: 'Reconstruction', title: 'Particle Flow & EDM4hep', body: 'Reconstructed tracks, clusters, and jets.', step: 3 },
+  ],
+  edges: [
+    { from: 'lagrangian', to: 'mc', label: 'Matrix element', step: 1 },
+    { from: 'mc', to: 'det', label: 'HepMC3', step: 2 },
+    { from: 'det', to: 'reco', label: 'Hits', step: 3 },
+    { from: 'mc', to: 'reco', label: 'Truth link', style: 'dashed', step: 3 },
+  ],
+};
+
+const samplePlotData = [
+  {
+    x: [1, 2, 5, 10, 20, 50, 100],
+    y: [0.06, 0.042, 0.027, 0.019, 0.014, 0.009, 0.007],
+    mode: 'lines+markers',
+    name: 'Stochastic + Constant',
+  },
+];
+---
+<LectureLayout meta={meta} sections={sections}>
+  <Section kind="prose" id="reading"  title="Reading & Callouts">
+    <p>
+      Standard monograph prose sits in the main reading column while marginalia align naturally    </p>
+    <Marginalia n="1">
+      Marginalia drop cleanly into the right rail inside <code>prose</code> sections.
+    </Marginalia>
+    <Callout kind="definition" title="Semantic Surfaces">
+      Every block inherits <code>bg-paper</code>, <code>text-ink</code>, <code>text-muted</code>,
+      <code>border-rule</code>, and <code>text-accent</code> from its parent section surface.
+    </Callout>
+  </Section>
+<Section kind="derivation" id="derivation" title="Math & Derivation">
+  <Derivation title="Relativistic Invariant Mass" collapsible={true}>
+    <p>Start from the four-momentum sum of two massless decay products:</p>
+    <MathBlock tex="p^\mu = p_1^\mu + p_2^\mu, \qquad p_i^2 = 0" eq="1.1" />
+    <p>Contracting with the Minkowski metric yields the invariant mass squared:</p>
+    <MathBlock tex="m_{12}^2 = (p_1 + p_2)^2 = 2 E_1 E_2 (1 - \cos\theta_{12})" eq="1.2" highlight={true}>
+      <span slot="where">
+        Where <MathBlock inline tex="E_1, E_2" /> are lab-frame energies and <MathBlock inline tex="\theta_{12}" /> is the opening angle.
+      </span>
+    </MathBlock>
+    <div slot="result">
+      In the small-angle limit, <MathBlock inline tex="m_{12} \approx \sqrt{E_1 E_2}\,\theta_{12}" />.
+    </div>
+  </Derivation>
+</Section>  <Section kind="steps" id="steps" title="Procedure Steps">
+    <Steps title="Four-Stage Workflow">
+      <Step n={1} title="Define Physical Observables" meta="Level 1">
+        Separate idealized theory quantities from reconstructed observables.
+      </Step>
+      <Step n={2} title="Validate Numerics" meta="Level 2">
+        Check convergence, boundary conditions, and physical units before plotting.
+      </Step>
+    </Steps>
+  </Section>
+
+  <Section kind="example" id="visuals" title="Plotly & MindMap">
+    <Figure n={1} span="wide">
+      <Plotly
+        id="demo-calorimeter"
+        data={samplePlotData}
+        layout={{
+          title: 'Calorimeter Resolution Scaling',
+          xaxis: { title: 'Energy [GeV]', type: 'log' },
+          yaxis: { title: 'σ(E) / E' },
+        }}
+        script="scripts/plot_calo_resolution.py"
+      />
+      <span slot="caption">
+        Illustrative stochastic resolution curve auto-themed from the enclosing surface tokens.
+      </span>
+    </Figure>
+
+    <MindMap title="Simulation-to-Reconstruction Pipeline" spec={sampleGraph} />
+  </Section>
+
+  <Section kind="lab" id="lab" title="Code & Exercises">
+    <Code
+      category="algo"
+      lang="python"
+      title="invariant_mass.py"
+      env="Python 3.12 · NumPy"
+      code={`import numpy as np
+
+def invariant_mass(e1: float, e2: float, theta: float) -> float:
+    return float(np.sqrt(2.0 * e1 * e2 * (1.0 - np.cos(theta))))`}
+    />
+
+    <Exercise n="1.1" effort="derive">
+      Show how the invariant mass expression modifies when $m_1 = m_2 = m_\mu \neq 0$.
+    </Exercise>
+  </Section>
+</LectureLayout>

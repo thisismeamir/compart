@@ -1,0 +1,134 @@
+---
+import Base from '../layouts/Base.astro';
+import DependencySpine from '../components/DependencySpine.astro';
+import TracksExplorer from '../components/TrackExplorer.astro';
+import { manifest } from '../data/curriculum';
+
+const stats = [
+  { label: 'Curriculum Parts', value: String(manifest.stats.partsCount), detail: 'Parts 0–14' },
+  { label: 'Lectures', value: String(manifest.stats.lecturesCount), detail: 'Notes · Labs · Sets' },
+  { label: 'Specialization Tracks', value: String(manifest.stats.tracksCount), detail: 'Shared Core Spine' },
+  { label: 'Verified References', value: manifest.stats.referencesCount.toLocaleString(), detail: 'arXiv · DOI · CERN' },
+];
+
+const pillars = [
+  { kicker: 'Dependency Spine', body: manifest.architecture.dependencySpine },
+  { kicker: 'Two-Stage Labs', body: manifest.architecture.twoStageLabs },
+  { kicker: 'Four-Track Design', body: manifest.architecture.fourTrackDesign },
+  { kicker: 'Reference Rigor', body: manifest.architecture.referenceRigor },
+];
+---
+
+<Base>
+  <section id="overview" class="border-b border-rule bg-paper py-20 text-ink">
+    <div class="mx-auto max-w-6xl px-6">
+      <div class="max-w-3xl">
+        <p class="font-display text-label uppercase text-accent">
+          Graduate HEP Curriculum · First Principles to FCC
+        </p>
+        <h1 class="mt-4 font-display text-h1 font-light text-ink">ComPart</h1>
+        <p class="mt-6 font-text text-body text-muted">
+          {manifest.description}
+        </p>
+        <div class="mt-8 flex flex-wrap gap-3 font-display text-small">
+          <a
+            href="/blocks-demo"
+            class="bg-accent px-5 py-2.5 text-white transition hover:bg-orion-70"
+          >
+            Preview Lecture Blocks →
+          </a>
+          <a
+            href="#tracks"
+            class="border border-rule bg-paper px-5 py-2.5 text-ink transition hover:border-ink"
+          >
+            View 4 Tracks
+          </a>
+          <a
+            href="#spine"
+            class="border border-rule bg-paper px-5 py-2.5 text-ink transition hover:border-ink"
+          >
+            Lecture Dependencies
+          </a>
+        </div>
+      </div>
+
+      <dl class="mt-16 grid grid-cols-2 gap-6 border-t border-rule pt-10 sm:grid-cols-4">
+        {stats.map((s) => (
+          <div>
+            <dd class="font-display text-h2 font-light text-ink">{s.value}</dd>
+            <dt class="mt-1 font-display text-small text-ink">{s.label}</dt>
+            <p class="mt-1 font-code text-label uppercase text-muted">{s.detail}</p>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+  <section id="architecture" data-surface="inset" class="border-b border-rule bg-paper py-20 text-ink">
+    <div class="mx-auto max-w-6xl px-6">
+      <div class="max-w-3xl">
+        <p class="font-display text-label uppercase text-accent">Curriculum Architecture</p>
+        <h2 class="mt-2 font-display text-h2 font-light text-ink">How ComPart Is Structured</h2>
+        <p class="mt-4 font-text text-small leading-relaxed text-muted">
+          {manifest.architecture.structure}
+        </p>
+      </div>
+
+      <div class="mt-12 grid gap-x-10 gap-y-8 border-t border-rule pt-10 md:grid-cols-2">
+        {pillars.map((p) => (
+          <div class="border-l-2 border-accent pl-5">
+            <p class="font-display text-label uppercase text-accent">{p.kicker}</p>
+            <p class="mt-2 font-text text-small leading-relaxed text-ink">{p.body}</p>
+          </div>
+        ))}
+      </div>
+
+      <div class="mt-12 grid gap-10 border-t border-rule pt-10 md:grid-cols-2">
+        <div>
+          <p class="font-display text-label uppercase text-muted">Standard Unit Format</p>
+          <ul class="mt-3 flex list-[square] flex-col gap-1.5 pl-4 font-text text-small text-ink">
+            {manifest.unitFormat.map((item) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <p class="font-display text-label uppercase text-muted">Proficiency Levels</p>
+          <dl class="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {manifest.architecture.proficiencyLevels.map((lvl) => (
+              <div class="border-t border-rule pt-2">
+                <dt class="font-code text-h4 text-accent">{lvl.code}</dt>
+                <dd class="mt-0.5 font-text text-small text-muted">{lvl.label}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tracks" class="border-b border-rule bg-paper py-20 text-ink">
+    <div class="mx-auto max-w-6xl px-6">
+      <p class="font-display text-label uppercase text-accent">Navigation Paths</p>
+      <h2 class="mt-2 font-display text-h2 font-light text-ink">Four Specialization Tracks</h2>
+      <p class="mt-3 max-w-3xl font-text text-small text-muted">
+        {manifest.architecture.fourTrackDesign}
+      </p>
+      <TracksExplorer />
+    </div>
+  </section>
+
+  <section id="spine" data-surface="dark" class="bg-paper py-20 text-ink">
+    <div class="mx-auto max-w-6xl px-6">
+      <p class="font-display text-label uppercase text-accent">Curriculum Graph</p>
+      <h2 class="mt-2 font-display text-h2 font-light text-ink">Lecture Dependencies</h2>
+      <p class="mt-3 max-w-3xl font-text text-small text-muted">
+        {manifest.architecture.dependencySpine}
+      </p>
+      <div class="mt-8">
+        <DependencySpine />
+      </div>
+    </div>
+  </section>
+</Base>

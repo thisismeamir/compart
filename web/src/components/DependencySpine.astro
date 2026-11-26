@@ -1,0 +1,224 @@
+---
+import Mindmap, { type GraphSpec, type GraphNode } from './blocks/MindMap.astro';
+import { manifest, partsByNumber, compactTitle, formatSubset } from '../data/curriculum';
+
+// Layout coordinates for the 6x4 Mindmap grid (layout only; all content comes from manifest.json)
+const layoutMap: Record<number, { col: number; row: number; colSpan?: number; variant: GraphNode['variant']; step: number }> = {
+  // Row 0: Parallel Infrastructure & Machine Tracks
+  4:  { col: 1, row: 0, colSpan: 2, variant: 'muted',  step: 2 },
+  6:  { col: 3, row: 0, colSpan: 1, variant: 'muted',  step: 3 },
+  10: { col: 4, row: 0, colSpan: 2, variant: 'muted',  step: 4 },
+  // Row 1: Core Spine (left → right)
+  0:  { col: 0, row: 1, variant: 'muted',  step: 1 },
+  1:  { col: 1, row: 1, variant: 'base',   step: 1 },
+  2:  { col: 2, row: 1, variant: 'base',   step: 1 },
+  3:  { col: 3, row: 1, variant: 'base',   step: 1 },
+  5:  { col: 4, row: 1, variant: 'base',   step: 2 },
+  7:  { col: 5, row: 1, variant: 'base',   step: 3 },
+  // Row 2: Core Spine (right → left under P7)
+  14: { col: 1, row: 2, variant: 'muted',  step: 5 },
+  13: { col: 2, row: 2, variant: 'accent', step: 5 },
+  11: { col: 3, row: 2, variant: 'base',   step: 4 },
+  9:  { col: 4, row: 2, variant: 'base',   step: 4 },
+  8:  { col: 5, row: 2, variant: 'base',   step: 3 },
+  // Row 3: ML Branch
+  12: { col: 3, row: 3, colSpan: 2, variant: 'accent', step: 5 },
+};
+
+const nodes: GraphNode[] = manifest.parts.map((p) => {
+  const pos = layoutMap[p.number];
+  return {
+    id: `p${p.number}`,
+    col: pos.col,
+    row: pos.row,
+    colSpan: pos.colSpan,
+    variant: pos.variant,
+    kicker: `P${p.number} · ${p.level} · ${p.lectureCount} lec`,
+    title: compactTitle(p.title),
+    step: pos.step,
+  };
+});
+
+const coreEdges = manifest.graph.coreSpine.slice(0, -1).map((fromNum, i) => {
+  const toNum = manifest.graph.coreSpine[i + 1];
+  return {
+    from: `p${fromNum}`,
+    to: `p${toNum}`,
+    style: 'solid' as const,
+    step: layoutMap[toNum].step,
+  };
+});
+
+const branchEdges = [
+  { from: 'p4',  to: 'p8',  style: 'dashed' as const, step: 3 },
+  { from: 'p4',  to: 'p10', style: 'dashed' as const, step: 4 },
+  { from: 'p6',  to: 'p7',  style: 'dashed' as const, step: 3 },
+  { from: 'p10', to: 'p11', style: 'dashed' as const, step: 4 },
+  { from: 'p3',  to: 'p12', style: 'dashed' as const, step: 5 },
+  { from: 'p9',  to: 'p12', style: 'dashed' as const, step: 5 },
+  { from: 'p12', to: 'p13', style: 'dashed' as const, step: 5 },
+];
+
+const spec: GraphSpec = {
+  grid: { cols: 6, rows: 4 },
+  nodes,
+  edges: [...coreEdges, ...branchEdges],
+};
+
+const partPayload = manifest.parts.map((p) => ({
+  id: `p${p.number}`,
+  num: p.number,
+  slug: p.slug,
+  title: p.title,
+  level: p.level,
+  role: p.role,
+  lectures: p.lectureCount,
+  prereqs: p.dependencies.prerequisites,
+  downstream: p.dependencies.downstream,
+}));
+
+const trackFilters = {
+  all: {
+    label: `All ${manifest.stats.partsCount} Parts`,
+    ids: manifest.parts.map((p) => `p${p.number}`),
+    subsets: {} as Record<string, string>,
+  },
+  ...Object.fromEntries(
+    manifest.tracks.map((t) => [
+      t.id,
+      {
+        label: t.name.replace(' Track', ''),
+        ids: t.stops.map((s) => `p${s.part}`),
+        subsets: Object.fromEntries(
+          t.stops
+            .map((s) => [`p${s.part}`, formatSubset(s.lectures)])
+            .filter(([, v]) => v !== null),
+        ),
+      },
+    ]),
+  ),
+};
+
+const initial = partsByNumber[0];
+---
+
+<div data-spine-root class="space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex flex-wrap items-center gap-2 font-code text-label uppercase" role="group" aria-label="Filter by track">
+      {Object.entries(trackFilters).map(([key, t]) => (
+        <button
+          type="button"
+          data-spine-track={key}
+          class={`cursor-pointer border px-2.5 py-1 transition ${
+            key === 'all'
+              ? 'border-accent bg-accent text-white'
+              : 'border-rule bg-paper text-ink hover:border-accent hover:text-accent'
+          }`}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+
+    <span data-spine-note class="font-code text-label text-muted">
+      Click any Part node to inspect its scope and dependencies.
+    </span>
+  </div>
+
+  <Mindmap
+    spec={spec}
+    title={`ComPart Dependency Spine (${manifest.stats.partsCount} Parts · ${manifest.stats.lecturesCount} Lectures)`}
+    interactive={true}
+    span="wide"
+  />
+
+  <div class="flex flex-wrap items-start justify-between gap-4 border border-rule bg-paper px-5 py-4 text-ink">
+    <div class="min-w-0 max-w-3xl space-y-1">
+      <p data-spine-meta class="m-0 font-code text-label uppercase text-muted">
+        Part {initial.number} · {initial.role} · Level {initial.level} · {initial.lectureCount} Lectures
+      </p>
+      <p data-spine-title class="m-0 font-display text-h4 font-light">
+        {initial.title}
+      </p>
+      <p data-spine-deps class="m-0 pt-1 font-text text-small text-muted">
+        {initial.dependencies.raw}
+      </p>
+    </div>
+
+    <a
+      data-spine-link
+      href={`/parts/${initial.slug}`}
+      class="shrink-0 border border-accent bg-accent px-3 py-1.5 font-code text-label uppercase text-white transition hover:opacity-90"
+    >
+      Open Part {initial.number} →
+    </a>
+  </div>
+</div>
+
+<script define:vars={{ partPayload, trackFilters }}>
+  const root = document.querySelector('[data-spine-root]');
+  if (root) {
+    const byId = Object.fromEntries(partPayload.map((p) => [p.id, p]));
+    const trackBtns = root.querySelectorAll('[data-spine-track]');
+    const nodeEls = root.querySelectorAll('[data-mm-node]');
+    const noteEl = root.querySelector('[data-spine-note]');
+    const metaEl = root.querySelector('[data-spine-meta]');
+    const titleEl = root.querySelector('[data-spine-title]');
+    const depsEl = root.querySelector('[data-spine-deps]');
+    const linkEl = root.querySelector('[data-spine-link]');
+
+    let activeTrack = 'all';
+
+    function selectNode(id) {
+      const p = byId[id];
+      if (!p) return;
+      const subset = trackFilters[activeTrack]?.subsets?.[id];
+      if (metaEl) {
+        metaEl.textContent = `Part ${p.num} · ${p.role} · Level ${p.level} · ${p.lectures} Lectures${subset ? ` · Track focus: ${subset}` : ''}`;
+      }
+      if (titleEl) titleEl.textContent = p.title;
+      if (depsEl) depsEl.textContent = `Prerequisites: ${p.prereqs}${p.downstream ? ` — Downstream: ${p.downstream}` : ''}`;
+      if (linkEl) {
+        linkEl.setAttribute('href', `/parts/${p.slug}`);
+        linkEl.textContent = `Open Part ${p.num} →`;
+      }
+    }
+
+    function setTrack(key) {
+      activeTrack = key;
+      const t = trackFilters[key];
+      if (!t) return;
+      const activeSet = new Set(t.ids);
+
+      trackBtns.forEach((btn) => {
+        const on = btn.getAttribute('data-spine-track') === key;
+        btn.className = `cursor-pointer border px-2.5 py-1 transition ${
+          on
+            ? 'border-accent bg-accent text-white'
+            : 'border-rule bg-paper text-ink hover:border-accent hover:text-accent'
+        }`;
+      });
+
+      nodeEls.forEach((el) => {
+        const id = el.getAttribute('data-mm-node');
+        el.style.opacity = activeSet.has(id) ? '' : '0.22';
+      });
+
+      if (noteEl) {
+        noteEl.textContent =
+          key === 'all'
+            ? 'Click any Part node to inspect its scope and dependencies.'
+            : `${t.label} Track: ${t.ids.length} Parts highlighted.`;
+      }
+    }
+
+    nodeEls.forEach((el) => {
+      el.classList.add('cursor-pointer');
+      el.addEventListener('click', () => selectNode(el.getAttribute('data-mm-node')));
+    });
+
+    trackBtns.forEach((btn) => {
+      btn.addEventListener('click', () => setTrack(btn.getAttribute('data-spine-track')));
+    });
+  }
+</script>

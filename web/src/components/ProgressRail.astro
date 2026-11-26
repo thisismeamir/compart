@@ -1,0 +1,55 @@
+---
+import { sections as registry, type SectionKind } from '../theme/sections';
+import Icon from './Icon.astro';
+
+export interface RailSection {
+  id: string;
+  title: string;
+  kind: SectionKind;
+}
+
+interface Props {
+  sections: RailSection[];
+}
+
+const { sections } = Astro.props;
+---
+<!-- Desktop: fixed vertical rail -->
+<nav
+  aria-label="Lecture sections"
+  class="fixed left-4 top-1/2 z-30 hidden -translate-y-1/2 flex-col gap-3 lg:flex"
+>
+  {sections.map((s) => (
+    <a
+      href={`#${s.id}`}
+      data-rail-link={s.id}
+      class="group/rail relative grid size-8 place-items-center rounded-full border border-transparent
+             text-muted transition hover:border-rule hover:text-ink
+             aria-[current=true]:bg-ink aria-[current=true]:text-paper"
+    >
+      <Icon name={registry[s.kind].icon} class="size-4" />
+      <span
+        class="pointer-events-none absolute left-10 whitespace-nowrap bg-ink px-2.5 py-1
+               font-display text-label uppercase text-paper opacity-0 transition-opacity
+               group-hover/rail:opacity-100"
+      >
+        {s.title}
+      </span>
+    </a>
+  ))}
+</nav>
+
+<!-- Mobile: sticky segmented strip -->
+<nav
+  aria-label="Lecture sections"
+  class="sticky top-0 z-30 flex h-1.5 w-full gap-px bg-paper lg:hidden"
+>
+  {sections.map((s) => (
+    <a
+      href={`#${s.id}`}
+      data-rail-link={s.id}
+      aria-label={s.title}
+      class="flex-1 bg-rule transition-colors aria-[current=true]:bg-accent"
+    />
+  ))}
+</nav>

@@ -1,0 +1,166 @@
+---
+import Base from './Base.astro';
+
+interface NavLink {
+  label: string;
+  href: string;
+}
+
+interface ReleaseLinks {
+  version?: string;
+  pdfUrl?: string;
+  latexUrl?: string;
+  materialsUrl?: string;
+}
+
+interface Props {
+  partNumber: number;
+  title: string;
+  level: string;
+  role: string;
+  lectureCount: number;
+  abstract: string;
+  prerequisites?: string;
+  downstream?: string;
+  tracks?: { name: string; href: string }[];
+  learningOutcomes?: string[];
+  release?: ReleaseLinks;
+  prevPart?: NavLink;
+  nextPart?: NavLink;
+}
+
+const {
+  partNumber,
+  title,
+  level,
+  role,
+  lectureCount,
+  abstract,
+  prerequisites,
+  downstream,
+  tracks = [],
+  learningOutcomes = [],
+  release,
+  prevPart,
+  nextPart,
+} = Astro.props;
+---
+
+<Base title={`Part ${partNumber}: ${title} — ComPart`} description={abstract} showNav={true}>
+  <section class="border-b border-rule bg-paper py-16 text-ink">
+    <div class="mx-auto max-w-6xl px-6">
+      <nav aria-label="Breadcrumb" class="mb-6 flex items-center gap-2 font-code text-label uppercase text-muted">
+        <a href="/" class="transition hover:text-ink">ComPart</a>
+        <span>/</span>
+        <a href="/#spine" class="transition hover:text-ink">Parts</a>
+        <span>/</span>
+        <span class="text-ink">Part {partNumber}</span>
+      </nav>
+
+      <div class="flex flex-wrap items-center gap-3 font-code text-label uppercase">
+        <span class="bg-accent px-2 py-0.5 text-white">Part {partNumber}</span>
+        <span class="border border-rule px-2 py-0.5 text-ink">{role}</span>
+        <span class="border border-rule px-2 py-0.5 text-muted">Level {level}</span>
+        <span class="text-muted">· {lectureCount} {lectureCount === 1 ? 'Lecture' : 'Lectures'}</span>
+      </div>
+
+      <h1 class="mt-5 max-w-4xl font-display text-h1 font-light text-ink">{title}</h1>
+
+      <p class="mt-6 max-w-3xl font-text text-body text-muted">{abstract}</p>
+
+      <div class="mt-8 flex flex-wrap items-center gap-3 font-display text-small">
+        {release?.pdfUrl ? (
+          <a href={release.pdfUrl} class="bg-accent px-5 py-2.5 text-white transition hover:bg-orion-70">
+            Part PDF {release.version ? `(${release.version})` : ''} →
+          </a>
+        ) : (
+          <span class="border border-rule bg-paper px-4 py-2 font-code text-label uppercase text-muted">
+            PDF · Pending Release
+          </span>
+        )}
+
+        {release?.latexUrl && (
+          <a href={release.latexUrl} class="border border-rule bg-paper px-5 py-2.5 text-ink transition hover:border-ink">
+            LaTeX Source
+          </a>
+        )}
+
+        {release?.materialsUrl && (
+          <a href={release.materialsUrl} class="border border-rule bg-paper px-5 py-2.5 text-ink transition hover:border-ink">
+            Materials Bundle
+          </a>
+        )}
+      </div>
+
+      {(prerequisites || downstream || tracks.length > 0) && (
+        <dl class="mt-12 grid gap-8 border-t border-rule pt-8 md:grid-cols-3">
+          {prerequisites && (
+            <div>
+              <dt class="font-code text-label uppercase text-muted">Prerequisites</dt>
+              <dd class="mt-2 font-text text-small leading-relaxed text-ink">{prerequisites}</dd>
+            </div>
+          )}
+          {downstream && (
+            <div>
+              <dt class="font-code text-label uppercase text-muted">Feeds Into</dt>
+              <dd class="mt-2 font-text text-small leading-relaxed text-ink">{downstream}</dd>
+            </div>
+          )}
+          {tracks.length > 0 && (
+            <div>
+              <dt class="font-code text-label uppercase text-muted">Included In Tracks</dt>
+              <dd class="mt-2 flex flex-wrap gap-2 font-code text-label uppercase">
+                {tracks.map((t) => (
+                  <a href={t.href} class="border border-rule px-2.5 py-1 text-ink transition hover:border-accent hover:text-accent">
+                    {t.name}
+                  </a>
+                ))}
+              </dd>
+            </div>
+          )}
+        </dl>
+      )}
+    </div>
+  </section>
+
+  {learningOutcomes.length > 0 && (
+    <section data-surface="inset" class="border-b border-rule bg-paper py-14 text-ink">
+      <div class="mx-auto max-w-6xl px-6">
+        <p class="font-display text-label uppercase text-accent">Outcomes</p>
+        <h2 class="mt-2 font-display text-h2 font-light text-ink">Complete Learning List</h2>
+        <ul class="mt-6 grid list-[square] gap-x-10 gap-y-2.5 pl-4 font-text text-small leading-relaxed text-ink md:grid-cols-2">
+          {learningOutcomes.map((item) => (
+            <li>{item}</li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
+
+  <div class="bg-paper text-ink">
+    <slot />
+  </div>
+
+  {(prevPart || nextPart) && (
+    <nav aria-label="Adjacent parts" class="border-t border-rule bg-paper font-display text-ink">
+      <div class="mx-auto grid max-w-6xl grid-cols-2 divide-x divide-rule">
+        <div class="p-6">
+          {prevPart && (
+            <a href={prevPart.href} class="group block">
+              <span class="block font-code text-label uppercase text-muted">← Previous</span>
+              <span class="mt-1 block text-small text-ink group-hover:text-accent">{prevPart.label}</span>
+            </a>
+          )}
+        </div>
+        <div class="p-6 text-right">
+          {nextPart && (
+            <a href={nextPart.href} class="group block">
+              <span class="block font-code text-label uppercase text-muted">Next →</span>
+              <span class="mt-1 block text-small text-ink group-hover:text-accent">{nextPart.label}</span>
+            </a>
+          )}
+        </div>
+      </div>
+    </nav>
+  )}
+</Base>

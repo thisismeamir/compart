@@ -1,0 +1,184 @@
+---
+import LectureLayout from '../../layouts/LectureLayout.astro';
+import Section from '../../components/Section.astro';
+import type { RailSection } from '../../components/ProgressRail.astro';
+import type { ContentType, LectureMeta } from '../../theme/content-types';
+import {
+  manifest,
+  partsByNumber,
+  compactTitle,
+  type PartEntry,
+  type LectureEntry,
+} from '../../data/curriculum';
+
+export function getStaticPaths() {
+  const flat = manifest.parts.flatMap((part) =>
+    part.lectures.map((lecture) => ({ part, lecture })),
+  );
+
+  return flat.map(({ part, lecture }, idx) => {
+    const prevItem = idx > 0 ? flat[idx - 1] : undefined;
+    const nextItem = idx < flat.length - 1 ? flat[idx + 1] : undefined;
+
+    return {
+      params: {
+        part: part.slug,
+        lecture: lecture.slug,
+      },
+      props: {
+        part,
+        lecture,
+        prev: prevItem
+          ? {
+              slug: `${prevItem.part.slug}/${prevItem.lecture.slug}`,
+              title: `${prevItem.lecture.id} · ${prevItem.lecture.title}`,
+            }
+          : undefined,
+        next: nextItem
+          ? {
+              slug: `${nextItem.part.slug}/${nextItem.lecture.slug}`,
+              title: `${nextItem.lecture.id} · ${nextItem.lecture.title}`,
+            }
+          : undefined,
+      },
+    };
+  });
+}
+
+interface Props {
+  part: PartEntry;
+  lecture: LectureEntry;
+  prev?: { slug: string; title: string };
+  next?: { slug: string; title: string };
+}
+
+const { part, lecture, prev, next } = Astro.props;
+
+// Resolve "Lecture X.Y" and "Part N" mentions in prerequisites into valid site links
+function resolvePrerequisites(raw: string): { slug: string; title: string }[] {
+  const seen = new Set<string>();
+  const links: { slug: string; title: string }[] = [];
+
+  for (const m of raw.matchAll(/(\d+)\.(\d+)/g)) {
+    const pNum = Number(m[1]);
+    const lecId = `${pNum}.${m[2]}`;
+    const p = partsByNumber[pNum];
+    const l = p?.lectures.find((item) => item.id === lecId);
+    if (p && l && l.id !== lecture.id) {
+      const slug = `${p.slug}/${l.slug}`;
+      if (!seen.has(slug)) {
+        seen.add(slug);
+        links.push({ slug, title: `Lecture ${l.id} · ${compactTitle(l.title)}` });
+      }
+    }
+  }
+
+  for (const m of raw.matchAll(/Part\s+(\d+)/g)) {
+    const pNum = Number(m[1]);
+    const p = partsByNumber[pNum];
+    if (p) {
+      const slug = `parts/${p.slug}`;
+      if (!seen.has(slug)) {
+        seen.add(slug);
+        links.push({ slug, title: `Part ${p.number} · ${compactTitle(p.title)}` });
+      }
+    }
+  }
+
+  return links;
+}
+
+const defaultContentTypes: ContentType[] = ['math', 'code', 'exercises', 'figures'];
+
+const meta: LectureMeta = {
+  title: lecture.title,
+  part: part.number,
+  number: lecture.lectureNumber,
+  abstract: lecture.abstract,
+  deliverables: lecture.learningOutcomes,
+  contentTypes: defaultContentTypes,
+  prerequisites: resolvePrerequisites(lecture.dependencies.prerequisites),
+};
+
+const railSections: RailSection[] = [
+  { id: 'dependencies', title: 'Dependencies', kind: 'prose' },
+  { id: 'deliverables', title: 'Deliverables', kind: 'steps' },
+  { id: 'notes', title: 'Lecture Notes', kind: 'lab' },
+  { id: 'references', title: 'References', kind: 'prose' },
+];
+
+const deliverableItems = [
+  { label: 'Lecture Note', text: lecture.deliverables.lectureNote },
+  { label: 'Lab', text: lecture.deliverables.lab },
+  { label: 'Problem Set', text: lecture.deliverables.problemSet },
+  { label: 'Reading List Structure', text: lecture.deliverables.readingListStructure },
+];
+---
+
+<LectureLayout meta={meta} sections={railSections} prev={prev} next={next}>
+  <Section kind="prose" id="dependencies" title="Dependencies & Context" form="split" surface="plain">
+    <div class="border-l-2 border-accent pl-5">
+      <p class="font-code text-label uppercase text-accent">Prerequisites</p>
+      <p class="mt-2 font-text text-small leading-relaxed text-ink">
+        {lecture.dependencies.prerequisites || 'None specified.'}
+      </p>
+    </div>
+
+    <div class="border-l-2 border-rule pl-5">
+      <p class="font-code text-label uppercase text-muted">Downstream</p>
+      <p class="mt-2 font-text text-small leading-relaxed text-ink">
+        {lecture.dependencies.downstream || 'None specified.'}
+      </p>
+    </div>
+  </Section>
+
+  <Section kind="steps" id="deliverables" title="Deliverables" form="split" surface="inset">
+    {deliverableItems.map((d) => (
+      <div class="border-l-2 border-accent pl-5">
+        <p class="font-display text-label uppercase text-accent">{d.label}</p>
+        <p class="mt-2 font-text text-small leading-relaxed text-ink">{d.text}</p>
+      </div>
+    ))}
+  </Section>
+
+  <Section kind="lab" id="notes" title="Lecture Notes" form="wide" surface="dark">
+    <div class="border border-rule bg-paper p-6">
+      <div class="flex flex-wrap items-center justify-between gap-2 font-code text-label uppercase">
+        <span class="text-accent">Status · {lecture.status}</span>
+        <span class="text-muted">Part {part.number} · Level {lecture.level}</span>
+      </div>
+      <p class="mt-4 font-text text-small leading-relaxed text-muted">
+        Markdown content for Lecture {lecture.id} is pending audit. Once published in the repository,
+        this section will render directly from:
+      </p>
+      <p class="mt-3 font-code text-label text-ink">{lecture.markdownPath}</p>
+    </div>
+  </Section>
+
+  <Section
+    kind="prose"
+    id="references"
+    title={`Verified References (${lecture.references.length})`}
+    form="wide"
+    surface="plain"
+  >
+    <ol class="grid gap-x-10 gap-y-3 pl-5 font-text text-small leading-relaxed text-ink md:grid-cols-2">
+      {lecture.references.map((ref) => (
+        <li>
+          {ref.url ? (
+            <a
+              href={ref.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="transition hover:text-accent hover:underline"
+            >
+              {ref.text}
+            </a>
+          ) : (
+            <span>{ref.text}</span>
+          )}
+        </li>
+      ))}
+    </ol>
+  </Section>
+</LectureLayout>

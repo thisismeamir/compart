@@ -1,0 +1,120 @@
+---
+import TrackMap, { type TrackId } from './TrackMap.astro';
+
+interface TrackTab {
+  id: TrackId;
+  name: string;
+  focus: string;
+  path: string;
+  href: string;
+}
+
+const tracks: TrackTab[] = [
+  {
+    id: 'analyst',
+    name: 'Analyst Track',
+    focus: 'Kinematics, statistics, FCCAnalyses, SMEFT, and global fits.',
+    path: '0 → 1 → 2 → 3 → 4 → 5 → 9 → 10 → 11 → 12 → 13.1/13.7 → 14',
+    href: '/tracks/analyst',
+  },
+  {
+    id: 'detector',
+    name: 'Detector Track',
+    focus: 'Particle–matter interactions, gaseous/silicon sensors, calorimetry, and MDI.',
+    path: '0 → 1 → 2 → 3 → 6 → 7 → 8.6–8.8 → 9 → 13.2–13.6 → 14',
+    href: '/tracks/detector',
+  },
+  {
+    id: 'simulation',
+    name: 'Simulation Track',
+    focus: 'Monte Carlo generation, Geant4/DD4hep, fast-sim surrogates, and validation.',
+    path: '0 → 1 → 2 → 3 → 4 → 5 → 7 → 8 → 10 → 12.4 → 13 → 14',
+    href: '/tracks/simulation',
+  },
+  {
+    id: 'software',
+    name: 'Software Track',
+    focus: 'Modern C++20, Key4hep/EDM4hep, ACTS, columnar I/O, and ML deployment.',
+    path: '0 → 1.2/1.8 → 3.7 → 4 → 8 → 9.1–9.3/9.13 → 10 → 12.2/12.6 → 13.7 → 14',
+    href: '/tracks/software',
+  },
+];
+---
+
+<div data-tracks-explorer class="mt-10">
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" role="tablist" aria-label="Specialization Tracks">
+    {tracks.map((t, i) => (
+      <button
+        type="button"
+        role="tab"
+        aria-selected={i === 0 ? 'true' : 'false'}
+        data-track-tab={t.id}
+        class={`cursor-pointer border p-4 text-left transition ${
+          i === 0
+            ? 'border-accent bg-accent text-white'
+            : 'border-rule bg-white text-ink hover:border-accent dark:bg-paper'
+        }`}
+      >
+        <p class={`m-0 font-display text-label uppercase ${i === 0 ? 'text-white/80' : 'text-accent'}`}>
+          {t.name}
+        </p>
+        <p class={`m-0 mt-2 font-text text-small leading-snug ${i === 0 ? 'text-white/95' : 'text-muted'}`}>
+          {t.focus}
+        </p>
+      </button>
+    ))}
+  </div>
+
+  <div class="mt-6">
+    {tracks.map((t, i) => (
+      <div data-track-panel={t.id} class={i === 0 ? '' : 'hidden'}>
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-rule pb-3">
+          <p class="m-0 font-code text-label text-muted">{t.path}</p>
+          <a
+            href={t.href}
+            class="shrink-0 font-code text-label uppercase text-accent transition hover:underline"
+          >
+            Full {t.name} →
+          </a>
+        </div>
+
+        <TrackMap trackId={t.id} interactive={true} span="wide" />
+      </div>
+    ))}
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('[data-tracks-explorer]').forEach((root) => {
+    const tabs = root.querySelectorAll<HTMLButtonElement>('[data-track-tab]');
+    const panels = root.querySelectorAll<HTMLElement>('[data-track-panel]');
+
+    function activate(id: string) {
+      tabs.forEach((tab) => {
+        const on = tab.dataset.trackTab === id;
+        tab.setAttribute('aria-selected', on ? 'true' : 'false');
+        tab.className = `cursor-pointer border p-4 text-left transition ${
+          on
+            ? 'border-accent bg-accent text-white'
+            : 'border-rule bg-white text-ink hover:border-accent dark:bg-paper'
+        }`;
+        const [kicker, desc] = tab.querySelectorAll('p');
+        if (kicker) kicker.className = `m-0 font-display text-label uppercase ${on ? 'text-white/80' : 'text-accent'}`;
+        if (desc) desc.className = `m-0 mt-2 font-text text-small leading-snug ${on ? 'text-white/95' : 'text-muted'}`;
+      });
+
+      panels.forEach((panel) => {
+        panel.classList.toggle('hidden', panel.dataset.trackPanel !== id);
+      });
+
+      // Trigger Mindmap SVG edge redraw after the newly visible panel has layout dimensions
+      requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        if (tab.dataset.trackTab) activate(tab.dataset.trackTab);
+      });
+    });
+  });
+</script>

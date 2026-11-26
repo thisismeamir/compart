@@ -1,0 +1,29 @@
+---
+// src/components/blocks/Figure.astro
+interface Props {
+  n?: number | string;
+  id?: string;
+  span?: 'main' | 'wide';
+  panels?: 1 | 2 | 3;
+}
+const { n, id, span = 'main', panels = 1 } = Astro.props;
+
+const spans = { main: '', wide: 'lg:col-span-full' } as const;
+const cols = {
+  1: '',
+  2: 'sm:grid-cols-2',
+  3: 'sm:grid-cols-2 lg:grid-cols-3',
+} as const;
+const hasCaption = Astro.slots.has('caption');
+---
+<figure id={id} class={`my-10 text-ink ${spans[span]}`}>
+  <div class={`grid items-start gap-4 ${cols[panels]}`}>
+    <slot />
+  </div>
+  {(hasCaption || n) && (
+    <figcaption class="mt-3 border-t border-rule pt-3 font-text text-small text-muted">
+      {n && <span class="mr-2 font-code text-label uppercase text-accent">Fig. {n}</span>}
+      <slot name="caption" />
+    </figcaption>
+  )}
+</figure>

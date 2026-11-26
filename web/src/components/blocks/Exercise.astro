@@ -1,0 +1,16 @@
+---
+// src/components/blocks/Exercise.astro
+import { efforts, type Effort } from '../../theme/efforts';
+
+interface Props { n: number | string; effort?: Effort }
+const { n, effort } = Astro.props;
+---
+<div class="grid grid-cols-[4.5rem_1fr] gap-x-4 border-t border-rule py-5 text-ink">
+  <p class="font-code text-label uppercase text-muted">
+    <span class="text-accent">{n}</span>
+    {effort && <span class="block">{efforts[effort].label}</span>}
+  </p>
+  <div class="font-text text-body">
+    <slot />
+  </div>
+</div>

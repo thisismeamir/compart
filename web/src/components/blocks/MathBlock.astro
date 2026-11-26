@@ -1,0 +1,64 @@
+---
+interface Props {
+  tex: string;
+  inline?: boolean;
+  id?: string;
+  label?: string;
+  eq?: string | number;
+  highlight?: boolean;
+}
+
+const {
+  tex,
+  inline = false,
+  id,
+  label,
+  eq,
+  highlight = false,
+} = Astro.props;
+
+const hasWhere = Astro.slots.has('where');
+---
+{inline ? (
+  <span
+    id={id}
+    class="font-math text-ink"
+    data-katex="inline"
+    data-tex={tex}
+  >
+    {tex}
+  </span>
+) : (
+  <div
+    id={id}
+    class:list={[
+      'my-8 text-ink',
+      highlight && 'border-l-2 border-accent pl-5',
+    ]}
+  >
+    {label && (
+      <p class="mb-2 font-display text-label uppercase text-accent">
+        {label}
+      </p>
+    )}
+
+    <div class="grid grid-cols-[1fr_auto] items-center gap-4">
+      <div
+        class="overflow-x-auto py-2 font-math text-body"
+        data-katex="display"
+        data-tex={tex}
+      >
+        {tex}
+      </div>
+      {eq && (
+        <span class="font-code text-label text-muted">({eq})</span>
+      )}
+    </div>
+
+    {hasWhere && (
+      <div class="mt-2 border-t border-rule pt-2 font-display text-small text-muted">
+        <slot name="where" />
+      </div>
+    )}
+  </div>
+)}
